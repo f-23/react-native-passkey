@@ -1,0 +1,24 @@
+name: Build, test and lint
+
+on:
+  push:
+    branches:
+      - '*'
+      - '!stable'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: yarn install --frozen-lockfile
+      - run: yarn run prepare
+      - name: Type Check
+        run: yarn run typescript
+      - name: Lint
+        run: yarn run lint
+      - name: Test
+        run: yarn run test
