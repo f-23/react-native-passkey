@@ -45,9 +45,7 @@ Remember to add tests for your change if possible. Run the unit tests by:
 yarn test
 ```
 
-To edit the Objective-C files, open `example/ios/PasskeyExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > react-native-passkey`.
-
-To edit the Kotlin files, open `example/android` in Android studio and find the source files at `reactnativepasskey` under `Android`.
+To edit the Objective-C / Swift files, open `example/ios/PasskeyExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > react-native-passkey`.
 
 ### Commit message convention
 
@@ -75,5 +73,4 @@ The `package.json` file contains various scripts for common tasks:
 - `yarn lint`: lint files with ESLint.
 - `yarn test`: run unit tests with Jest.
 - `yarn example start`: start the Metro server for the example app.
-- `yarn example android`: run the example app on Android.
 - `yarn example ios`: run the example app on iOS.
