@@ -1,5 +1,7 @@
 # react-native-passkey
 
+[![Build](https://img.shields.io/github/workflow/status/mTRx0/react-native-passkey/Build)](https://img.shields.io/github/workflow/status/mTRx0/react-native-passkey/Build) [![Version](https://img.shields.io/npm/v/react-native-passkey)](https://img.shields.io/npm/v/react-native-passkey) [![License](https://img.shields.io/npm/l/react-native-passkey)](https://img.shields.io/npm/l/react-native-passkey)
+
 Native Passkeys on iOS (and soon android) using React Native.
 
 > Please note that this package only supports iOS 15.0+
