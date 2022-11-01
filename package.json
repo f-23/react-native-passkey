@@ -44,7 +44,7 @@
     "auth"
   ],
   "repository": "https://github.com/mTRx0/react-native-passkey",
-  "author": "mtrx0 <fabian.kuentzler@tao.at> (https://github.com/mTRx0)",
+  "author": "mtrx0 <fabian@kuentzler.at> (https://github.com/mTRx0)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/mTRx0/react-native-passkey/issues"
