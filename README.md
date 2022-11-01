@@ -2,8 +2,8 @@
 
 Native Passkeys on iOS (and soon android) using React Native.
 
-> Please note that this package only supports on iOS 15.0+
-> Native android support will follow as soon as an API becomes available. ([More info](https://android-developers.googleblog.com/2022/10/bringing-passkeys-to-android-and-chrome.html))
+> Please note that this package only supports iOS 15.0+
+> Native android support will follow as soon as an API becomes available (In 2022). ([More info](https://android-developers.googleblog.com/2022/10/bringing-passkeys-to-android-and-chrome.html))
 
 ## Installation
 
