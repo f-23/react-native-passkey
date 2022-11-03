@@ -126,8 +126,7 @@ export interface PasskeyRegistrationResult {
 /**
  * The result of a successful authentication request
  */
-
-interface PasskeyAuthResult {
+export interface PasskeyAuthResult {
   credentialID: string;
   rawAuthenticatorData: string;
   rawClientDataJSON: string;
