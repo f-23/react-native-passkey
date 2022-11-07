@@ -18,3 +18,4 @@ jobs:
           days-before-pr-stale: 90
           days-before-issue-close: 15
           days-before-pr-close: 15
+          exempt-issue-labels: enhancement
