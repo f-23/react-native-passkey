@@ -1,11 +1,3 @@
-//
-//  PasskeyDelegate.swift
-//  Passkey
-//
-//  Created by Fabian on 22.10.22.
-//  Copyright © 2022 Facebook. All rights reserved.
-//
-
 import Foundation
 import AuthenticationServices
 
@@ -45,33 +37,77 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
   func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
     // Check if Passkeys are supported on this OS version
     if #available(iOS 15.0, *) {
-      /** We need to determine whether the request was a registration or authentication request */
-
+      /** We need to determine whether the request was a registration or authentication request and if a security key was used or not*/
+      
       // Request was a registration request
       if let credential = authorization.credential as? ASAuthorizationPlatformPublicKeyCredentialRegistration {
-        if let rawAttestationObject = credential.rawAttestationObject {
-          // Parse the authorization credential and resolve the callback
-          let registrationResult = PassKeyRegistrationResult(credentialID: credential.credentialID, rawAttestationObject: rawAttestationObject, rawClientDataJSON: credential.rawClientDataJSON);
-          
-          let passkeyResult = PassKeyResult(registrationResult: registrationResult);
-          self._completion(nil, passkeyResult);
-        } else {
-          // Authorization credential was malformed, throw an error
-          self._completion(PassKeyError.requestFailed, nil);
-        }
-        
-        //Request was an authentication request
+        self.handlePlatformPublicKeyRegistrationResponse(credential: credential)
+      //Request was an authentication request
       } else if let credential = authorization.credential as? ASAuthorizationPlatformPublicKeyCredentialAssertion {
-        // Parse the authorization credential and resolve the callback
-        let assertionResult = PassKeyAssertionResult(credentialID: credential.credentialID, rawAuthenticatorData: credential.rawAuthenticatorData, rawClientDataJSON: credential.rawClientDataJSON, signature: credential.signature, userID: credential.userID);
-        
-        let passkeyResult = PassKeyResult(assertionResult: assertionResult);
-        self._completion(nil, passkeyResult);
+        self.handlePlatformPublicKeyAssertionResponse(credential: credential)
+      // Request was a registration request with security key
+      } else if let credential = authorization.credential as? ASAuthorizationSecurityKeyPublicKeyCredentialRegistration {
+        self.handleSecurityKeyPublicKeyRegistrationResponse(credential: credential)
+      // Request was an authentication request with security key
+      } else if let credential = authorization.credential as? ASAuthorizationSecurityKeyPublicKeyCredentialAssertion {
+        self.handleSecurityKeyPublicKeyAssertionResponse(credential: credential)
+      } else {
+        self._completion(PassKeyError.requestFailed, nil)
       }
-      
     } else {
       // Authorization credential was malformed, throw an error
       self._completion(PassKeyError.notSupported, nil);
     }
+  }
+  
+  @available(iOS 15.0, *)
+  func handlePlatformPublicKeyRegistrationResponse(credential: ASAuthorizationPlatformPublicKeyCredentialRegistration) -> Void {
+    if let rawAttestationObject = credential.rawAttestationObject {
+      // Parse the authorization credential and resolve the callback
+      let registrationResult = PassKeyRegistrationResult(credentialID: credential.credentialID,
+                                                         rawAttestationObject: rawAttestationObject,
+                                                         rawClientDataJSON: credential.rawClientDataJSON);
+      self._completion(nil, PassKeyResult(registrationResult: registrationResult));
+    } else {
+      // Authorization credential was malformed, throw an error
+      self._completion(PassKeyError.requestFailed, nil);
+    }
+  }
+  
+  @available(iOS 15.0, *)
+  func handleSecurityKeyPublicKeyRegistrationResponse(credential: ASAuthorizationSecurityKeyPublicKeyCredentialRegistration) -> Void {
+    if let rawAttestationObject = credential.rawAttestationObject {
+      // Parse the authorization credential and resolve the callback
+      let registrationResult = PassKeyRegistrationResult(credentialID: credential.credentialID,
+                                                         rawAttestationObject: rawAttestationObject,
+                                                         rawClientDataJSON: credential.rawClientDataJSON);
+      self._completion(nil, PassKeyResult(registrationResult: registrationResult));
+    } else {
+      // Authorization credential was malformed, throw an error
+      self._completion(PassKeyError.requestFailed, nil);
+    }
+  }
+  
+  @available(iOS 15.0, *)
+  func handlePlatformPublicKeyAssertionResponse(credential: ASAuthorizationPlatformPublicKeyCredentialAssertion) -> Void {
+    // Parse the authorization credential and resolve the callback
+    let assertionResult = PassKeyAssertionResult(credentialID: credential.credentialID,
+                                                 rawAuthenticatorData: credential.rawAuthenticatorData,
+                                                 rawClientDataJSON: credential.rawClientDataJSON,
+                                                 signature: credential.signature,
+                                                 userID: credential.userID);
+    self._completion(nil, PassKeyResult(assertionResult: assertionResult));
+  }
+  
+  
+  @available(iOS 15.0, *)
+  func handleSecurityKeyPublicKeyAssertionResponse(credential: ASAuthorizationSecurityKeyPublicKeyCredentialAssertion) -> Void {
+    // Parse the authorization credential and resolve the callback
+    let assertionResult = PassKeyAssertionResult(credentialID: credential.credentialID,
+                                                 rawAuthenticatorData: credential.rawAuthenticatorData,
+                                                 rawClientDataJSON: credential.rawClientDataJSON,
+                                                 signature: credential.signature,
+                                                 userID: credential.userID);
+    self._completion(nil, PassKeyResult(assertionResult: assertionResult));
   }
 }

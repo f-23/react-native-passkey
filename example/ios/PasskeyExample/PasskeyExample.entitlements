@@ -4,7 +4,7 @@
 <dict>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>webcredentials:5307-91-119-47-243.eu.ngrok.io</string>
+		<string>webcredentials:example.domain</string>
 	</array>
 </dict>
 </plist>
