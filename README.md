@@ -1,9 +1,11 @@
 # react-native-passkey
 
+[![Build](https://img.shields.io/github/workflow/status/mTRx0/react-native-passkey/Build)](https://img.shields.io/github/workflow/status/mTRx0/react-native-passkey/Build) [![Version](https://img.shields.io/npm/v/react-native-passkey)](https://img.shields.io/npm/v/react-native-passkey) [![License](https://img.shields.io/npm/l/react-native-passkey)](https://img.shields.io/npm/l/react-native-passkey)
+
 Native Passkeys on iOS (and soon android) using React Native.
 
-> Please note that this package only supports on iOS 15.0+
-> Native android support will follow as soon as an API becomes available. ([More info](https://android-developers.googleblog.com/2022/10/bringing-passkeys-to-android-and-chrome.html))
+> Please note that this package only supports iOS 15.0+.
+> Native android support will follow as soon as an API becomes available (In 2022). ([More info](https://android-developers.googleblog.com/2022/10/bringing-passkeys-to-android-and-chrome.html))
 
 ## Installation
 
@@ -48,7 +50,7 @@ There are iOS specific steps you need to go through in order to configure Passke
   ```
 
 - This route should serve a static JSON object containing your team id and bundle identifier.
-  Example (replace XXXXXXXXXX with your team identifier and the rest with your bundle id):
+  Example (replace XXXXXXXXXX with your team identifier and the rest with your bundle id, e.g. "H123456789.com.mtrx0.passkeyExample"):
 
   ```json
   {
@@ -56,7 +58,6 @@ There are iOS specific steps you need to go through in order to configure Passke
     "webcredentials": {
       "apps": [
         "XXXXXXXXXX.YYY.YYYYY.YYYYYYYYYYYYYY"
-        // e.g. "H123456789.com.mtrx0.passkeyExample"
       ]
     },
     "appclips": {}
@@ -148,6 +149,26 @@ try {
 } catch (error) {
   // Handle Error...
 }
+```
+
+### Security Keys
+
+You can allow users to register and authenticate using a Security Key (like [Yubikey](https://www.yubico.com/)).
+
+For this just pass an options object containing `{ withSecurityKey: true }` to the `Passkey.auth()` or `Passkey.register()` calls.
+
+```ts
+const result: PasskeyAuthResult = await passkey.auth(challenge, { withSecurityKey: true });
+```
+
+or
+
+```ts
+const result: PasskeyRegistrationResult = await passkey.register(
+  challenge,
+  userID,
+  { withSecurityKey: true }
+);
 ```
 
 ---

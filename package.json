@@ -1,6 +1,6 @@
 {
   "name": "react-native-passkey",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Passkey implementation for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -8,7 +8,6 @@
   "react-native": "src/index",
   "source": "src/index",
   "files": [
-    "src",
     "lib",
     "android",
     "ios",
@@ -44,7 +43,7 @@
     "auth"
   ],
   "repository": "https://github.com/mTRx0/react-native-passkey",
-  "author": "mtrx0 <fabian.kuentzler@tao.at> (https://github.com/mTRx0)",
+  "author": "mtrx0 <fabian@kuentzler.at> (https://github.com/mTRx0)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/mTRx0/react-native-passkey/issues"

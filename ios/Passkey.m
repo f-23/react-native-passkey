@@ -7,11 +7,13 @@ RCT_EXTERN_METHOD(register:(NSString)identifier
                   withChallenge:(NSString)challenge
                   withDisplayName:(NSString) displayName
                   withUserId:(NSString) userId
+                  withSecurityKey: (BOOL) securityKey
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject);
 
 RCT_EXTERN_METHOD(auth:(NSString)identifier
                   withChallenge:(NSString)challenge
+                  withSecurityKey:(BOOL) securityKey
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject);
 

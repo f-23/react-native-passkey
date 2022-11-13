@@ -71,4 +71,22 @@ describe('Test Passkey Module', () => {
     await new Passkey('Test', 'Test').auth('testChallenge');
     expect(authSpy).toHaveBeenCalled();
   });
+
+  test('should call native register method with security key enabled', async () => {
+    const registerSpy = jest.spyOn(NativeModules.Passkey, 'register');
+
+    await new Passkey('Test', 'Test').register('testChallenge', 'testUserId', {
+      withSecurityKey: true,
+    });
+    expect(registerSpy).toHaveBeenCalled();
+  });
+
+  test('should call native auth method with security key enabled', async () => {
+    const authSpy = jest.spyOn(NativeModules.Passkey, 'auth');
+
+    await new Passkey('Test', 'Test').auth('testChallenge', {
+      withSecurityKey: true,
+    });
+    expect(authSpy).toHaveBeenCalled();
+  });
 });

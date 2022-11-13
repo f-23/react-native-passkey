@@ -1,10 +1,9 @@
-name: Build, test and lint
+name: Build
 
 on:
   push:
     branches:
       - '*'
-      - '!stable'
 
 jobs:
   build:
