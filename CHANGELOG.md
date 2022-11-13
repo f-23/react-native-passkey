@@ -1,3 +1,7 @@
+
+
+# [1.1.0](https://github.com/mTRx0/react-native-passkey/compare/v1.0.3...v1.1.0) (2022-11-13)
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
