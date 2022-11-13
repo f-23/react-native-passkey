@@ -27,6 +27,30 @@ export default function App() {
     }
   }
 
+  async function createAccountWithSecurityKey() {
+    try {
+      const result = await passkey.register('PASS CHALLENGE', 'PASS USERID', {
+        withSecurityKey: true,
+      });
+
+      console.log('Registration result: ', result);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function authenticateAccountWithSecurityKey() {
+    try {
+      const result = await passkey.auth('PASS CHALLENGE', {
+        withSecurityKey: true,
+      });
+
+      console.log('Authentication result: ', result);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
   async function isSupported() {
     const result = await Passkey.isSupported();
     Alert.alert(result ? 'Supported' : 'Not supported');
@@ -36,7 +60,15 @@ export default function App() {
     <View style={styles.container}>
       <TextInput placeholder="email" value={email} onChangeText={setEmail} />
       <Button title="Create Account" onPress={createAccount} />
+      <Button
+        title="Create Account with Security Key"
+        onPress={createAccountWithSecurityKey}
+      />
       <Button title="Authenticate" onPress={authenticateAccount} />
+      <Button
+        title="Authenticate with Security Key"
+        onPress={authenticateAccountWithSecurityKey}
+      />
       <Button title="isSupported?" onPress={isSupported} />
     </View>
   );

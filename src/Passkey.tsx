@@ -41,11 +41,13 @@ export class Passkey {
    *
    * @param challenge The FIDO2 challenge
    * @param userId The id of the new user
+   * @param options An object containing options for the registration process
    * @returns A result object containing all necessary FIDO2 data
    */
   public async register(
     challenge: string,
-    userId: string
+    userId: string,
+    options?: PasskeyOptions
   ): Promise<PasskeyRegistrationResult> {
     if (Platform.OS !== 'ios') {
       throw NotSupportedError;
@@ -58,14 +60,13 @@ export class Passkey {
     }
 
     try {
-      const result = (await NativePasskey.register(
+      return (await NativePasskey.register(
         this.identifier,
         challenge,
         this.displayName,
-        userId
+        userId,
+        options?.withSecurityKey ?? false
       )) as PasskeyRegistrationResult;
-
-      return result;
     } catch (error) {
       throw handleNativeError(error);
     }
@@ -75,9 +76,13 @@ export class Passkey {
    * Authenticates with an exisiting Passkey
    *
    * @param challenge The FIDO2 challenge
+   * @param options An object containing options for the authentication process
    * @returns A result object containing all necessary FIDO2 data and the userId associated with the selected Passkey
    */
-  public async auth(challenge: string): Promise<PasskeyAuthResult> {
+  public async auth(
+    challenge: string,
+    options?: PasskeyOptions
+  ): Promise<PasskeyAuthResult> {
     if (Platform.OS !== 'ios') {
       throw NotSupportedError;
     }
@@ -86,12 +91,11 @@ export class Passkey {
     }
 
     try {
-      const result = (await NativePasskey.auth(
+      return (await NativePasskey.auth(
         this.identifier,
-        challenge
+        challenge,
+        options?.withSecurityKey ?? false
       )) as PasskeyAuthResult;
-
-      return result;
     } catch (error) {
       throw handleNativeError(error);
     }
@@ -103,15 +107,12 @@ export class Passkey {
    * @returns A boolean indicating whether Passkeys are supported
    */
   public static async isSupported(): Promise<boolean> {
-    if (Platform.OS !== 'ios') {
-      return false;
-    }
-
-    if (parseInt(Platform.Version, 10) < 15) {
-      return false;
-    }
-    return true;
+    return !(Platform.OS !== 'ios' || parseInt(Platform.Version, 10) < 15);
   }
+}
+
+export interface PasskeyOptions {
+  withSecurityKey: boolean;
 }
 
 /**
@@ -119,8 +120,10 @@ export class Passkey {
  */
 export interface PasskeyRegistrationResult {
   credentialID: string;
-  rawAttestationObject: string;
-  rawClientDataJSON: string;
+  response: {
+    rawAttestationObject: string;
+    rawClientDataJSON: string;
+  };
 }
 
 /**
@@ -128,8 +131,10 @@ export interface PasskeyRegistrationResult {
  */
 export interface PasskeyAuthResult {
   credentialID: string;
-  rawAuthenticatorData: string;
-  rawClientDataJSON: string;
-  signature: string;
   userID: string;
+  response: {
+    rawAuthenticatorData: string;
+    rawClientDataJSON: string;
+    signature: string;
+  };
 }
