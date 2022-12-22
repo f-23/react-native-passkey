@@ -14,3 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - README typos
+
+## [1.1.1](https://github.com/mTRx0/react-native-passkey/compare/v1.1.0...v1.1.1) (2022-12-22)
+
+### Change
+
+- README update

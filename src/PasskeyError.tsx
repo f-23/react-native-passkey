@@ -5,7 +5,7 @@ export interface PasskeyError {
 
 export const UnknownError: PasskeyError = {
   error: 'Unknown error',
-  message: 'An unknown error occured',
+  message: 'An unknown error occurred',
 };
 
 export const NotSupportedError: PasskeyError = {

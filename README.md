@@ -1,11 +1,11 @@
 # react-native-passkey
 
-[![Build](https://img.shields.io/github/workflow/status/mTRx0/react-native-passkey/Build)](https://img.shields.io/github/workflow/status/mTRx0/react-native-passkey/Build) [![Version](https://img.shields.io/npm/v/react-native-passkey)](https://img.shields.io/npm/v/react-native-passkey) [![License](https://img.shields.io/npm/l/react-native-passkey)](https://img.shields.io/npm/l/react-native-passkey)
+[![Build](https://img.shields.io/github/actions/workflow/status/mTRx0/react-native-passkey/main.yml?branch=stable)](https://img.shields.io/github/workflow/status/mTRx0/react-native-passkey/Build) [![Version](https://img.shields.io/npm/v/react-native-passkey)](https://img.shields.io/npm/v/react-native-passkey) [![License](https://img.shields.io/npm/l/react-native-passkey)](https://img.shields.io/npm/l/react-native-passkey)
 
 Native Passkeys on iOS (and soon android) using React Native.
 
 > Please note that this package only supports iOS 15.0+.
-> Native android support will follow as soon as an API becomes available (In 2022). ([More info](https://android-developers.googleblog.com/2022/10/bringing-passkeys-to-android-and-chrome.html))
+> Native android support will follow as soon as an API becomes available. ([More info](https://github.com/mTRx0/react-native-passkey/issues/2))
 
 ## Installation
 
@@ -41,7 +41,7 @@ in the root of your React Native project.
 
 There are iOS specific steps you need to go through in order to configure Passkey support.
 
-#### Setup an associated domain for your application ([More info](https://developer.apple.com/documentation/xcode/supporting-associated-domains))
+#### Set up an associated domain for your application ([More info](https://developer.apple.com/documentation/xcode/supporting-associated-domains))
 
 - You need to associate a domain with your application. On your webserver set up this route:
 

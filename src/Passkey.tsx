@@ -8,8 +8,8 @@ import { NativePasskey } from './NativePasskey';
 import { Platform } from 'react-native';
 
 export class Passkey {
-  private _identifier: string;
-  private _displayName: string;
+  private readonly _identifier: string;
+  private readonly _displayName: string;
 
   /**
    * Creates a new Passkey Instance
@@ -73,7 +73,7 @@ export class Passkey {
   }
 
   /**
-   * Authenticates with an exisiting Passkey
+   * Authenticates with an existing Passkey
    *
    * @param challenge The FIDO2 challenge
    * @param options An object containing options for the authentication process
