@@ -1,5 +1,7 @@
 
 
+## [1.1.2](https://github.com/mTRx0/react-native-passkey/compare/v1.1.1...v1.1.2) (2023-01-20)
+
 ## [1.1.1](https://github.com/mTRx0/react-native-passkey/compare/v1.1.0...v1.1.1) (2022-12-22)
 
 # Changelog
