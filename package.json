@@ -42,13 +42,13 @@
     "authentication",
     "auth"
   ],
-  "repository": "https://github.com/mTRx0/react-native-passkey",
-  "author": "mtrx0 <fabian@kuentzler.at> (https://github.com/mTRx0)",
+  "repository": "https://github.com/f-23/react-native-passkey",
+  "author": "f-23 <fabian@kuentzler.at> (https://github.com/f-23)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/mTRx0/react-native-passkey/issues"
+    "url": "https://github.com/f-23/react-native-passkey/issues"
   },
-  "homepage": "https://github.com/mTRx0/react-native-passkey#readme",
+  "homepage": "https://github.com/f-23/react-native-passkey#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
@@ -87,9 +87,7 @@
     ]
   },
   "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
+    "extends": ["@commitlint/config-conventional"]
   },
   "release-it": {
     "name": "react-native-passkey",
@@ -114,10 +112,7 @@
   },
   "eslintConfig": {
     "root": true,
-    "extends": [
-      "@react-native-community",
-      "prettier"
-    ],
+    "extends": ["@react-native-community", "prettier"],
     "rules": {
       "prettier/prettier": [
         "error",
@@ -131,10 +126,7 @@
       ]
     }
   },
-  "eslintIgnore": [
-    "node_modules/",
-    "lib/"
-  ],
+  "eslintIgnore": ["node_modules/", "lib/"],
   "prettier": {
     "quoteProps": "consistent",
     "singleQuote": true,

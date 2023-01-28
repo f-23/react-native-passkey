@@ -56,9 +56,7 @@ There are iOS specific steps you need to go through in order to configure Passke
   {
     "applinks": {},
     "webcredentials": {
-      "apps": [
-        "XXXXXXXXXX.YYY.YYYYY.YYYYYYYYYYYYYY"
-      ]
+      "apps": ["XXXXXXXXXX.YYY.YYYYY.YYYYYYYYYYYYYY"]
     },
     "appclips": {}
   }
@@ -90,6 +88,7 @@ After configuration there are two methods used for creating new passkeys and aut
 import { Passkey, PasskeyRegistrationResult } from 'react-native-passkey';
 
 // Retrieve a valid FIDO2 attestation challenge
+// The challenge needs to be a base64 encoded string
 // and a newly generated user ID from your backend
 // There are plenty of libraries which can be used for this (e.g. fido2-lib)
 
@@ -123,6 +122,7 @@ try {
 import { Passkey, PasskeyAuthResult } from 'react-native-passkey';
 
 // Retrieve a valid FIDO2 assertion challenge
+// The challenge needs to be a base64 encoded string
 // There are plenty of libraries which can be used for this (e.g. fido2-lib)
 
 try {
@@ -158,7 +158,9 @@ You can allow users to register and authenticate using a Security Key (like [Yub
 For this just pass an options object containing `{ withSecurityKey: true }` to the `Passkey.auth()` or `Passkey.register()` calls.
 
 ```ts
-const result: PasskeyAuthResult = await passkey.auth(challenge, { withSecurityKey: true });
+const result: PasskeyAuthResult = await passkey.auth(challenge, {
+  withSecurityKey: true,
+});
 ```
 
 or
