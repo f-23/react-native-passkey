@@ -21,8 +21,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - README update
 
-## [1.1.2](https://github.com/mTRx0/react-native-passkey/compare/v1.1.0...v1.1.2) (2023-01-20)
+## [1.1.2](https://github.com/mTRx0/react-native-passkey/compare/v1.1.1...v1.1.2) (2023-01-20)
 
 ### Fixes
 
 - Fixed an importing issue for React Native (PR #6)
+
+## [1.1.3](https://github.com/mTRx0/react-native-passkey/compare/v1.1.2...v1.1.3) (2023-01-28)
+
+### Added
+
+- Added installation support for iOS 11+
+
+### Fixes
+
+- README fixes
