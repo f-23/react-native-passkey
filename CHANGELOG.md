@@ -1,3 +1,7 @@
+
+
+## [1.1.3](https://github.com/f-23/react-native-passkey/compare/v1.1.2...v1.1.3) (2023-01-28)
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
