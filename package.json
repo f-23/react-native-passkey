@@ -87,7 +87,9 @@
     ]
   },
   "commitlint": {
-    "extends": ["@commitlint/config-conventional"]
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
   },
   "release-it": {
     "name": "react-native-passkey",
@@ -112,7 +114,10 @@
   },
   "eslintConfig": {
     "root": true,
-    "extends": ["@react-native-community", "prettier"],
+    "extends": [
+      "@react-native-community",
+      "prettier"
+    ],
     "rules": {
       "prettier/prettier": [
         "error",
@@ -126,7 +131,10 @@
       ]
     }
   },
-  "eslintIgnore": ["node_modules/", "lib/"],
+  "eslintIgnore": [
+    "node_modules/",
+    "lib/"
+  ],
   "prettier": {
     "quoteProps": "consistent",
     "singleQuote": true,
