@@ -28,7 +28,7 @@ const Platform = {
 const NativeModules = {
   Passkey: {
     register: jest.fn(),
-    auth: jest.fn(),
+    authenticate: jest.fn(),
   },
 };
 

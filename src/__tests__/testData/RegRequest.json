@@ -1,0 +1,31 @@
+{
+  "challenge": "nhkQXfE59Jb97VyyNJkvDiXucMEvltduvcrDmGrODHY",
+  "rp": {
+    "name": "Passkey Test",
+    "id": "com.passkeyTest"
+  },
+  "user": {
+    "id": "2HzoHm_hY0CjuEESY9tY6-3SdjmNHOoNqaPDcZGzsr0",
+    "name": "Passkey Test",
+    "displayName": "Passkey Test"
+  },
+  "pubKeyCredParams": [
+    {
+      "type": "public-key",
+      "alg": -7
+    },
+    {
+      "type": "public-key",
+      "alg": -257
+    }
+  ],
+  "timeout": 1800000,
+  "attestation": "none",
+  "excludeCredentials": [],
+  "authenticatorSelection": {
+    "authenticatorAttachment": "platform",
+    "requireResidentKey": true,
+    "residentKey": "required",
+    "userVerification": "required"
+  }
+}
