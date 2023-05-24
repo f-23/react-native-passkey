@@ -3,13 +3,20 @@ import * as React from 'react';
 import { StyleSheet, View, Button, TextInput, Alert } from 'react-native';
 import { Passkey } from 'react-native-passkey';
 
+import RegRequest from '../../src/__tests__/testData/RegRequest.json';
+import AuthRequest from '../../src/__tests__/testData/AuthRequest.json';
+
 export default function App() {
   const [email, setEmail] = React.useState('');
-  const passkey = new Passkey('REPLACE IDENTIFIER', 'REPLACE DISPLAY NAME');
 
   async function createAccount() {
     try {
-      const result = await passkey.register('PASS CHALLENGE', 'PASS USERID');
+      const requestJson = {
+        // ...Retrieve request from server
+        ...RegRequest,
+      };
+
+      const result = await Passkey.register(requestJson);
 
       console.log('Registration result: ', result);
     } catch (e) {
@@ -19,7 +26,12 @@ export default function App() {
 
   async function authenticateAccount() {
     try {
-      const result = await passkey.auth('PASS CHALLENGE');
+      const requestJson = {
+        // ...Retrieve request from server
+        ...AuthRequest,
+      };
+
+      const result = await Passkey.authenticate(requestJson);
 
       console.log('Authentication result: ', result);
     } catch (e) {
@@ -29,7 +41,12 @@ export default function App() {
 
   async function createAccountWithSecurityKey() {
     try {
-      const result = await passkey.register('PASS CHALLENGE', 'PASS USERID', {
+      const requestJson = {
+        // ...Retrieve request from server
+        ...RegRequest,
+      };
+
+      const result = await Passkey.register(requestJson, {
         withSecurityKey: true,
       });
 
@@ -41,7 +58,12 @@ export default function App() {
 
   async function authenticateAccountWithSecurityKey() {
     try {
-      const result = await passkey.auth('PASS CHALLENGE', {
+      const requestJson = {
+        // ...Retrieve request from server
+        ...AuthRequest,
+      };
+
+      const result = await Passkey.authenticate(requestJson, {
         withSecurityKey: true,
       });
 
