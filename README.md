@@ -123,7 +123,7 @@ try {
 #### Authenticating with existing Passkey
 
 ```ts
-import { Passkey, PasskeyAuthResult } from 'react-native-passkey';
+import { Passkey, PasskeyAuthenticationResult } from 'react-native-passkey';
 
 // Retrieve a valid FIDO2 assertion request from your server 
 // The challenge inside the request needs to be a base64 encoded string
