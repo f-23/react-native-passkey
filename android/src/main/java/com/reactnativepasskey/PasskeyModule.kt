@@ -79,7 +79,6 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
 
   @ReactMethod
   fun authenticate(requestJson: String, promise: Promise) {
-      Log.e("Passkey", "AUTHENTICATE")
       val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext);
       val getCredentialRequest =
         GetCredentialRequest(listOf(GetPublicKeyCredentialOption(requestJson)))
