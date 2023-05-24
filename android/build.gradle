@@ -8,7 +8,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.5.3'
+    classpath 'com.android.tools.build:gradle:7.3.0'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
@@ -133,8 +133,13 @@ def kotlin_version = getExtOrDefault('kotlinVersion')
 dependencies {
     //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-// From node_modules
+  // Android Credentials
+  implementation "androidx.credentials:credentials-play-services-auth:1.0.0-alpha08"
+  implementation "androidx.credentials:credentials:1.0.0-alpha08"
+
+  // Kotlin Coroutines
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
 }
 
 if (isNewArchitectureEnabled()) {

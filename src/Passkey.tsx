@@ -1,104 +1,55 @@
-import {
-  handleNativeError,
-  InvalidChallengeError,
-  InvalidUserIdError,
-  NotSupportedError,
-} from './PasskeyError';
-import { NativePasskey } from './NativePasskey';
+import { NotSupportedError } from './PasskeyError';
 import { Platform } from 'react-native';
+import { PasskeyAndroid } from './PasskeyAndroid';
+import { PasskeyiOS } from './PasskeyiOS';
 
 export class Passkey {
-  private readonly _identifier: string;
-  private readonly _displayName: string;
-
   /**
-   * Creates a new Passkey Instance
+   * Creates a new Passkey
    *
-   * @param identifier The identifier for the authorization process (usually the associated domain, refer to the docs)
-   * @param displayName The displayName for the native Overlay
-   */
-  constructor(identifier: string, displayName: string) {
-    this._identifier = identifier;
-    this._displayName = displayName;
-  }
-
-  /**
-   * Getter for Passkey displayName
-   */
-  private get displayName(): string {
-    return this._displayName;
-  }
-
-  /**
-   * Getter for Passkey identifier
-   */
-  private get identifier(): string {
-    return this._identifier;
-  }
-
-  /**
-   * Creates a new Passkey and associates it with a given userId
-   *
-   * @param challenge The FIDO2 challenge
-   * @param userId The id of the new user
+   * @param request The FIDO2 Attestation Request in JSON format
    * @param options An object containing options for the registration process
-   * @returns A result object containing all necessary FIDO2 data
+   * @returns The FIDO2 Attestation Result in JSON format
+   * @throws
    */
-  public async register(
-    challenge: string,
-    userId: string,
-    options?: PasskeyOptions
-  ): Promise<PasskeyRegistrationResult> {
-    if (Platform.OS !== 'ios') {
+  public static async register(
+    request: PasskeyRegistrationRequest,
+    { withSecurityKey }: { withSecurityKey: boolean } = {
+      withSecurityKey: false,
+    }
+  ): Promise<object> {
+    if (!Passkey.isSupported) {
       throw NotSupportedError;
     }
-    if (!challenge) {
-      throw InvalidChallengeError;
-    }
-    if (!userId) {
-      throw InvalidUserIdError;
-    }
 
-    try {
-      return (await NativePasskey.register(
-        this.identifier,
-        challenge,
-        this.displayName,
-        userId,
-        options?.withSecurityKey ?? false
-      )) as PasskeyRegistrationResult;
-    } catch (error) {
-      throw handleNativeError(error);
+    if (Platform.OS === 'android') {
+      return PasskeyAndroid.register(request);
     }
+    return PasskeyiOS.register(request, withSecurityKey);
   }
 
   /**
-   * Authenticates with an existing Passkey
+   * Authenticates using an existing Passkey
    *
-   * @param challenge The FIDO2 challenge
+   * @param request The FIDO2 Assertion Request in JSON format
    * @param options An object containing options for the authentication process
-   * @returns A result object containing all necessary FIDO2 data and the userId associated with the selected Passkey
+   * @returns The FIDO2 Assertion Result in JSON format
+   * @throws
    */
-  public async auth(
-    challenge: string,
-    options?: PasskeyOptions
-  ): Promise<PasskeyAuthResult> {
-    if (Platform.OS !== 'ios') {
+  public static async authenticate(
+    request: PasskeyAuthenticationRequest,
+    { withSecurityKey }: { withSecurityKey: boolean } = {
+      withSecurityKey: false,
+    }
+  ): Promise<PasskeyAuthenticationResult> {
+    if (!Passkey.isSupported) {
       throw NotSupportedError;
     }
-    if (!challenge) {
-      throw InvalidChallengeError;
-    }
 
-    try {
-      return (await NativePasskey.auth(
-        this.identifier,
-        challenge,
-        options?.withSecurityKey ?? false
-      )) as PasskeyAuthResult;
-    } catch (error) {
-      throw handleNativeError(error);
+    if (Platform.OS === 'android') {
+      return PasskeyAndroid.authenticate(request);
     }
+    return PasskeyiOS.authenticate(request, withSecurityKey);
   }
 
   /**
@@ -107,34 +58,84 @@ export class Passkey {
    * @returns A boolean indicating whether Passkeys are supported
    */
   public static async isSupported(): Promise<boolean> {
-    return !(Platform.OS !== 'ios' || parseInt(Platform.Version, 10) < 15);
+    if (Platform.OS === 'android') {
+      return Platform.Version > 28;
+    }
+
+    if (Platform.OS === 'ios') {
+      return parseInt(Platform.Version, 10) > 15;
+    }
+
+    return false;
   }
 }
 
+/**
+ * The available options for Passkey operations
+ */
 export interface PasskeyOptions {
-  withSecurityKey: boolean;
+  withSecurityKey: boolean; // iOS only
 }
 
 /**
- * The result of a successful registration request
+ * The FIDO2 Attestation Request
  */
-export interface PasskeyRegistrationResult {
-  credentialID: string;
-  response: {
-    rawAttestationObject: string;
-    rawClientDataJSON: string;
+export interface PasskeyRegistrationRequest {
+  challenge: string;
+  rp: {
+    id: string;
+    name?: string;
+  };
+  user: {
+    id: string;
+    name?: string;
+    displayName: string;
+  };
+  pubKeyCredParams: Array<{ type: string; alg: number }>;
+  timeout: number;
+  attestation: string;
+  authenticatorSelection: {
+    authenticatorAttachment?: string;
+    requireResidentKey?: boolean;
+    residentKey?: string;
+    userVerification?: string;
   };
 }
 
 /**
- * The result of a successful authentication request
+ * The FIDO2 Attestation Result
  */
-export interface PasskeyAuthResult {
-  credentialID: string;
-  userID: string;
+export interface PasskeyRegistrationResult {
+  id: string;
+  rawId: string;
+  type?: string;
   response: {
-    rawAuthenticatorData: string;
-    rawClientDataJSON: string;
+    clientDataJSON: string;
+    attestationObject: string;
+  };
+}
+
+/**
+ * The FIDO2 Assertion Request
+ */
+export interface PasskeyAuthenticationRequest {
+  challenge: string;
+  timeout: number;
+  userVerification: string;
+  rpId: string;
+}
+
+/**
+ * The FIDO2 Assertion Result
+ */
+export interface PasskeyAuthenticationResult {
+  id: string;
+  rawId: string;
+  type?: string;
+  response: {
+    authenticatorData: string;
+    clientDataJSON: string;
     signature: string;
+    userHandle: string;
   };
 }

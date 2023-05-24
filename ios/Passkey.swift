@@ -13,7 +13,7 @@ class Passkey: NSObject {
     }
     let userIdData: Data = RCTConvert.nsData(userId);
     
-    // Check if Passkeys are supported on this OS version
+    // Check if Passkeys are supported on this OS versionoiooo
     if #available(iOS 15.0, *) {
       let authController: ASAuthorizationController;
       
@@ -69,8 +69,8 @@ class Passkey: NSObject {
     }
   }
   
-  @objc(auth:withChallenge:withSecurityKey:withResolver:withRejecter:)
-  func auth(_ identifier: String, challenge: String, securityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+  @objc(authenticate:withChallenge:withSecurityKey:withResolver:withRejecter:)
+  func authenticate(_ identifier: String, challenge: String, securityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
 
     // Convert challenge to correct type
     guard let challengeData: Data = Data(base64Encoded: challenge) else {
@@ -140,6 +140,8 @@ class Passkey: NSObject {
     switch errorCode {
       case 1001:
         return PassKeyError.cancelled;
+      case 1004:
+        return PassKeyError.requestFailed;
       case 4004:
         return PassKeyError.notConfigured;
       default:
