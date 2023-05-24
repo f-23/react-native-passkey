@@ -39,7 +39,26 @@ export const NotConfiguredError: PasskeyError = {
   message: 'Your app is not properly configured. Refer to the docs for help.',
 };
 
-export function handleNativeError(_error: any): PasskeyError {
+export const NoCredentialsError: PasskeyError = {
+  error: 'NotCredentials',
+  message: 'No viable credential is available for the the user.',
+};
+
+export const InterruptedError: PasskeyError = {
+  error: 'Interrupted',
+  message: 'The operation was interrupted and may be retried.',
+};
+
+export const NativeError = (
+  message = 'An unknown error occurred'
+): PasskeyError => {
+  return {
+    error: 'Native error',
+    message: message,
+  };
+};
+
+export function handleNativeError(_error: unknown): PasskeyError {
   if (typeof _error !== 'object') {
     return UnknownError;
   }
@@ -62,8 +81,17 @@ export function handleNativeError(_error: any): PasskeyError {
     case 'NotConfigured': {
       return NotConfiguredError;
     }
-    default: {
+    case 'Interrupted': {
+      return InterruptedError;
+    }
+    case 'NoCredentials': {
+      return NoCredentialsError;
+    }
+    case 'UnknownError': {
       return UnknownError;
+    }
+    default: {
+      return NativeError(error);
     }
   }
 }
