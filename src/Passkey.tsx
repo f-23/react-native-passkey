@@ -127,12 +127,15 @@ export interface PasskeyRegistrationResult {
 
 /**
  * The FIDO2 Assertion Request
+ * https://www.w3.org/TR/webauthn-2/#dictionary-assertion-options
  */
 export interface PasskeyAuthenticationRequest {
   challenge: string;
-  timeout: number;
-  userVerification: string;
   rpId: string;
+  timeout?: number;
+  allowCredentials?: Array<PublicKeyCredentialDescriptor>;
+  userVerification?: string;
+  extensions?: Record<string, unknown>;
 }
 
 /**
