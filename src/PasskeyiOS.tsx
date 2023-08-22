@@ -18,7 +18,7 @@ export class PasskeyiOS {
   public static async register(
     request: PasskeyRegistrationRequest,
     withSecurityKey = false
-  ): Promise<object> {
+  ): Promise<PasskeyRegistrationResult> {
     // Extract the required data from the attestation request
     const { rpId, challenge, name, userID } =
       this.prepareRegistrationRequest(request);
