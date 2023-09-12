@@ -3,7 +3,7 @@ import AuthenticationServices
 @objc(Passkey)
 class Passkey: NSObject {
   var passKeyDelegate: PasskeyDelegate?;
-  
+
   @objc(register:withChallenge:withDisplayName:withUserId:withSecurityKey:withResolver:withRejecter:)
   func register(_ identifier: String, challenge: String, displayName: String, userId: String, securityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
     // Convert challenge and userId to correct type
@@ -12,11 +12,11 @@ class Passkey: NSObject {
       return;
     }
     let userIdData: Data = RCTConvert.nsData(userId);
-    
-    // Check if Passkeys are supported on this OS versionoiooo
+
+    // Check if Passkeys are supported on this OS version
     if #available(iOS 15.0, *) {
       let authController: ASAuthorizationController;
-      
+
       // Check if registration should proceed with a security key
       if (securityKey) {
         // Create a new registration request with security key
@@ -30,7 +30,7 @@ class Passkey: NSObject {
         let authRequest = platformProvider.createCredentialRegistrationRequest(challenge: challengeData, name: displayName, userID: userIdData);
         authController = ASAuthorizationController(authorizationRequests: [authRequest]);
       }
-      
+
       // Set up a PasskeyDelegate instance with a callback function
       self.passKeyDelegate = PasskeyDelegate { error, result in
         // Check if authorization process returned an error and throw if thats the case
@@ -39,7 +39,7 @@ class Passkey: NSObject {
           reject(passkeyError.rawValue, passkeyError.rawValue, nil);
           return;
         }
-        
+
         // Check if the result object contains a valid registration result
         if let registrationResult = result?.registrationResult {
           // Return a NSDictionary instance with the received authorization data
@@ -47,7 +47,7 @@ class Passkey: NSObject {
             "rawAttestationObject": registrationResult.rawAttestationObject.base64EncodedString(),
             "rawClientDataJSON": registrationResult.rawClientDataJSON.base64EncodedString()
           ];
-          
+
           let authResult: NSDictionary = [
             "credentialID": registrationResult.credentialID.base64EncodedString(),
             "response": authResponse
@@ -58,7 +58,7 @@ class Passkey: NSObject {
           reject(PassKeyError.requestFailed.rawValue, PassKeyError.requestFailed.rawValue, nil);
         }
       }
-      
+
       if let passKeyDelegate = self.passKeyDelegate {
         // Perform the authorization request
         passKeyDelegate.performAuthForController(controller: authController);
@@ -68,7 +68,7 @@ class Passkey: NSObject {
       reject(PassKeyError.notSupported.rawValue, PassKeyError.notSupported.rawValue, nil);
     }
   }
-  
+
   @objc(authenticate:withChallenge:withSecurityKey:withResolver:withRejecter:)
   func authenticate(_ identifier: String, challenge: String, securityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
 
@@ -77,11 +77,11 @@ class Passkey: NSObject {
       reject(PassKeyError.invalidChallenge.rawValue, PassKeyError.invalidChallenge.rawValue, nil);
       return;
     }
-    
+
     // Check if Passkeys are supported on this OS version
     if #available(iOS 15.0, *) {
       let authController: ASAuthorizationController;
-      
+
       // Check if authentication should proceed with a security key
       if (securityKey) {
         // Create a new assertion request with security key
@@ -94,7 +94,7 @@ class Passkey: NSObject {
         let authRequest = platformProvider.createCredentialAssertionRequest(challenge: challengeData);
         authController = ASAuthorizationController(authorizationRequests: [authRequest]);
       }
-      
+
       // Set up a PasskeyDelegate instance with a callback function
       self.passKeyDelegate = PasskeyDelegate { error, result in
         // Check if authorization process returned an error and throw if thats the case
@@ -111,7 +111,7 @@ class Passkey: NSObject {
             "rawClientDataJSON": assertionResult.rawClientDataJSON.base64EncodedString(),
             "signature": assertionResult.signature.base64EncodedString(),
           ];
-          
+
           let authResult: NSDictionary = [
             "credentialID": assertionResult.credentialID.base64EncodedString(),
             "userID": String(decoding: assertionResult.userID, as: UTF8.self),
@@ -123,7 +123,7 @@ class Passkey: NSObject {
           reject(PassKeyError.requestFailed.rawValue, PassKeyError.requestFailed.rawValue, nil);
         }
       }
-      
+
       if let passKeyDelegate = self.passKeyDelegate {
         // Perform the authorization request
         passKeyDelegate.performAuthForController(controller: authController);
@@ -133,7 +133,7 @@ class Passkey: NSObject {
       reject(PassKeyError.notSupported.rawValue, PassKeyError.notSupported.rawValue, nil);
     }
   }
-  
+
   // Handles ASAuthorization error codes
   func handleErrorCode(error: Error) -> PassKeyError {
     let errorCode = (error as NSError).code;
