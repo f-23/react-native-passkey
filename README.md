@@ -99,6 +99,16 @@ The Android specific configuration is similar to iOS. If you have already set up
 
 ## Usage
 
+#### Check if Passkeys are supported
+
+```ts
+import { Passkey } from 'react-native-passkey';
+
+// Use this method to check if passkeys are supported on the device
+
+const isSupported: boolean = Passkey.isSupported();
+```
+
 #### Creating a new Passkey
 
 ```ts
