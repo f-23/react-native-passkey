@@ -26,21 +26,15 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
 
   @ReactMethod
   fun register(requestJson: String, promise: Promise) {
-    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext);
+    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
     val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(requestJson)
 
     mainScope.launch {
       try {
-        val result =
-          currentActivity?.let {
-            credentialManager.createCredential(
-              createPublicKeyCredentialRequest,
-              it
-            )
-          }
+        val result = currentActivity?.let { credentialManager.createCredential(it, createPublicKeyCredentialRequest) }
 
         val response =
-          result?.data?.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON");
+          result?.data?.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON")
         promise.resolve(response)
       } catch (e: CreateCredentialException) {
         promise.reject("Passkey", handleRegistrationException(e))
@@ -68,9 +62,6 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       is CreateCredentialUnsupportedException -> {
         return "NotSupported"
       }
-      is CreateCustomCredentialException -> {
-        return "UnknownError"
-      }
       else -> {
         return e.toString()
       }
@@ -79,17 +70,17 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
 
   @ReactMethod
   fun authenticate(requestJson: String, promise: Promise) {
-      val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext);
+      val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
       val getCredentialRequest =
         GetCredentialRequest(listOf(GetPublicKeyCredentialOption(requestJson)))
 
       mainScope.launch {
         try {
           val result =
-            currentActivity?.let { credentialManager.getCredential(getCredentialRequest, it) }
+            currentActivity?.let { credentialManager.getCredential(it, getCredentialRequest) }
 
           val response =
-            result?.credential?.data?.getString("androidx.credentials.BUNDLE_KEY_AUTHENTICATION_RESPONSE_JSON");
+            result?.credential?.data?.getString("androidx.credentials.BUNDLE_KEY_AUTHENTICATION_RESPONSE_JSON")
           promise.resolve(response)
         } catch (e: GetCredentialException) {
           promise.reject("Passkey", handleAuthenticationException(e))
@@ -113,9 +104,6 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       }
       is GetCredentialUnknownException -> {
         return "UnknownError"
-      }
-      is GetCustomCredentialException -> {
-        return e.toString()
       }
       is GetCredentialUnsupportedException -> {
         return "NotSupported"

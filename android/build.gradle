@@ -8,7 +8,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:7.3.0'
+    classpath 'com.android.tools.build:gradle:7.4.2'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
@@ -128,18 +128,16 @@ repositories {
   }
 }
 
-def kotlin_version = getExtOrDefault('kotlinVersion')
-
 dependencies {
     //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
   // Android Credentials
-  implementation "androidx.credentials:credentials-play-services-auth:1.0.0-alpha08"
-  implementation "androidx.credentials:credentials:1.0.0-alpha08"
+  implementation "androidx.credentials:credentials-play-services-auth:1.2.0-beta03"
+  implementation "androidx.credentials:credentials:1.2.0-beta03"
 
   // Kotlin Coroutines
-  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
-  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1'
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
 }
 
 if (isNewArchitectureEnabled()) {
