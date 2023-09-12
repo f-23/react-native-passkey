@@ -74,7 +74,7 @@ export default function App() {
   }
 
   async function isSupported() {
-    const result = await Passkey.isSupported();
+    const result = Passkey.isSupported();
     Alert.alert(result ? 'Supported' : 'Not supported');
   }
 

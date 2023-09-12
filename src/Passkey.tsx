@@ -57,7 +57,7 @@ export class Passkey {
    *
    * @returns A boolean indicating whether Passkeys are supported
    */
-  public static async isSupported(): Promise<boolean> {
+  public static isSupported(): boolean {
     if (Platform.OS === 'android') {
       return Platform.Version > 28;
     }
