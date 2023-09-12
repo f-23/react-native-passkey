@@ -17,7 +17,7 @@ export class Passkey {
     { withSecurityKey }: { withSecurityKey: boolean } = {
       withSecurityKey: false,
     }
-  ): Promise<object> {
+  ): Promise<PasskeyRegistrationResult> {
     if (!Passkey.isSupported) {
       throw NotSupportedError;
     }
@@ -77,29 +77,39 @@ export interface PasskeyOptions {
   withSecurityKey: boolean; // iOS only
 }
 
+// https://www.w3.org/TR/webauthn-2/#dictionary-credential-descriptor
+interface PublicKeyCredentialDescriptor {
+  type: string;
+  id: string;
+  transports?: Array<string>;
+}
+
 /**
  * The FIDO2 Attestation Request
+ * https://www.w3.org/TR/webauthn-2/#dictionary-makecredentialoptions
  */
 export interface PasskeyRegistrationRequest {
   challenge: string;
   rp: {
     id: string;
-    name?: string;
+    name: string;
   };
   user: {
     id: string;
-    name?: string;
+    name: string;
     displayName: string;
   };
   pubKeyCredParams: Array<{ type: string; alg: number }>;
-  timeout: number;
-  attestation: string;
-  authenticatorSelection: {
+  timeout?: number;
+  excludeCredentials?: Array<PublicKeyCredentialDescriptor>;
+  authenticatorSelection?: {
     authenticatorAttachment?: string;
     requireResidentKey?: boolean;
     residentKey?: string;
     userVerification?: string;
   };
+  attestation?: string;
+  extensions?: Record<string, unknown>;
 }
 
 /**
@@ -117,12 +127,15 @@ export interface PasskeyRegistrationResult {
 
 /**
  * The FIDO2 Assertion Request
+ * https://www.w3.org/TR/webauthn-2/#dictionary-assertion-options
  */
 export interface PasskeyAuthenticationRequest {
   challenge: string;
-  timeout: number;
-  userVerification: string;
   rpId: string;
+  timeout?: number;
+  allowCredentials?: Array<PublicKeyCredentialDescriptor>;
+  userVerification?: string;
+  extensions?: Record<string, unknown>;
 }
 
 /**
