@@ -40,8 +40,8 @@ export const NotConfiguredError: PasskeyError = {
 };
 
 export const NoCredentialsError: PasskeyError = {
-  error: 'NotCredentials',
-  message: 'No viable credential is available for the the user.',
+  error: 'NoCredentials',
+  message: 'No viable credential is available for the user.',
 };
 
 export const InterruptedError: PasskeyError = {
