@@ -69,8 +69,8 @@ class Passkey: NSObject {
     }
   }
 
-  @objc(authenticate:withChallenge:withSecurityKey:withResolver:withRejecter:)
-  func authenticate(_ identifier: String, challenge: String, securityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+  @objc(authenticate:withChallenge:withCredentialIDs:withSecurityKey:withResolver:withRejecter:)
+  func authenticate(_ identifier: String, challenge: String, credentialIDs: Array<String>, securityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
 
     // Convert challenge to correct type
     guard let challengeData: Data = Data(base64Encoded: challenge) else {
@@ -92,6 +92,18 @@ class Passkey: NSObject {
         // Create a new assertion request without security key
         let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: identifier);
         let authRequest = platformProvider.createCredentialAssertionRequest(challenge: challengeData);
+        if (credentialIDs.isEmpty == false) {
+          var ids: [ASAuthorizationPlatformPublicKeyCredentialDescriptor] = [];
+
+          credentialIDs.forEach { base64Id in 
+            guard let id: Data = Data(base64Encoded: base64Id) 
+            else { return; }
+
+            ids.append(ASAuthorizationPlatformPublicKeyCredentialDescriptor.init(credentialID: id));
+          }
+
+          authRequest.allowedCredentials = ids;
+        }
         authController = ASAuthorizationController(authorizationRequests: [authRequest]);
       }
 
@@ -155,6 +167,7 @@ enum PassKeyError: String, Error {
   case requestFailed = "RequestFailed"
   case cancelled = "UserCancelled"
   case invalidChallenge = "InvalidChallenge"
+  case invalidCredentialIDs = "InvalidCredentialIDs"
   case notConfigured = "NotConfigured"
   case unknown = "UnknownError"
 }

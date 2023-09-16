@@ -71,17 +71,20 @@ export class PasskeyiOS {
    * iOS implementation of the authentication process
    *
    * @param request The FIDO2 Assertion Request in JSON format
-   * @param withSecurityKey A boolean indicating wether a security key should be used for authentication
+   * @param credentialIDs A string array of allowed passkey credentialIDs
+   * @param withSecurityKey A boolean indicating whether a security key should be used for authentication
    * @returns The FIDO2 Assertion Result in JSON format
    */
   public static async authenticate(
     request: PasskeyAuthenticationRequest,
+    credentialIDs: Array<string> = [],
     withSecurityKey = false
   ): Promise<PasskeyAuthenticationResult> {
     try {
       const response = await NativePasskey.authenticate(
         request.rpId,
         request.challenge,
+        credentialIDs,
         withSecurityKey
       );
       return this.handleNativeAuthenticationResult(response);

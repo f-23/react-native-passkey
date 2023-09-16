@@ -29,6 +29,11 @@ export const InvalidChallengeError: PasskeyError = {
   message: 'The provided challenge was invalid',
 };
 
+export const InvalidCredentialIDsError: PasskeyError = {
+  error: 'InvalidCredentialIDs',
+  message: 'The provided credentialIDs were invalid',
+};
+
 export const InvalidUserIdError: PasskeyError = {
   error: 'InvalidUserId',
   message: 'The provided userId was invalid',

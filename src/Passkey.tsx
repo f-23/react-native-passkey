@@ -38,8 +38,9 @@ export class Passkey {
    */
   public static async authenticate(
     request: PasskeyAuthenticationRequest,
-    { withSecurityKey }: { withSecurityKey: boolean } = {
-      withSecurityKey: false,
+    { credentialIDs, withSecurityKey }: PasskeyOptions = {
+      credentialIDs: [],
+      withSecurityKey: false
     }
   ): Promise<PasskeyAuthenticationResult> {
     if (!Passkey.isSupported) {
@@ -49,7 +50,7 @@ export class Passkey {
     if (Platform.OS === 'android') {
       return PasskeyAndroid.authenticate(request);
     }
-    return PasskeyiOS.authenticate(request, withSecurityKey);
+    return PasskeyiOS.authenticate(request, credentialIDs, withSecurityKey);
   }
 
   /**
@@ -73,8 +74,12 @@ export class Passkey {
 /**
  * The available options for Passkey operations
  */
-export interface PasskeyOptions {
-  withSecurityKey: boolean; // iOS only
+export type PasskeyOptions = {
+  credentialIDs?: Array<string>; // iOS only
+  withSecurityKey?: false; // iOS only
+} | {
+  credentialIDs?: never; // iOS only
+  withSecurityKey: true; // iOS only
 }
 
 // https://www.w3.org/TR/webauthn-2/#dictionary-credential-descriptor
