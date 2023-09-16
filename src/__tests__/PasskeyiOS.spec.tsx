@@ -59,4 +59,16 @@ describe('Test Passkey Module', () => {
     });
     expect(authSpy).toHaveBeenCalled();
   });
+
+  test('should call native auth method with credentialIDs passed', async () => {
+    const authSpy = jest
+      .spyOn(NativeModules.Passkey, 'authenticate')
+      .mockResolvedValue(AuthiOSResult);
+
+    // TODO: test that this is actually only showing the creds specified
+    await Passkey.authenticate(AuthRequest, {
+      credentialIDs: ['wOcpYYrgQyCo7iy9q5IYodwSappmCy-CaXuV7hhKxtQdAAAAAA'],
+    });
+    expect(authSpy).toHaveBeenCalled();
+  });
 });
