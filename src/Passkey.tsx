@@ -18,7 +18,7 @@ export class Passkey {
       withSecurityKey: false,
     }
   ): Promise<PasskeyRegistrationResult> {
-    if (!Passkey.isSupported) {
+    if (!Passkey.isSupported()) {
       throw NotSupportedError;
     }
 
@@ -42,7 +42,7 @@ export class Passkey {
       withSecurityKey: false,
     }
   ): Promise<PasskeyAuthenticationResult> {
-    if (!Passkey.isSupported) {
+    if (!Passkey.isSupported()) {
       throw NotSupportedError;
     }
 
