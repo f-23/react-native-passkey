@@ -42,7 +42,7 @@
     "authentication",
     "auth"
   ],
-  "repository": "https://github.com/f-23/react-native-passkey",
+  "repository": "https://github.com/capsule-org/react-native-passkey",
   "author": "f-23 <fabian@kuentzler.at> (https://github.com/f-23)",
   "license": "MIT",
   "bugs": {
