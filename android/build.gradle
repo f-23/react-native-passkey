@@ -132,12 +132,12 @@ dependencies {
     //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
   // Android Credentials
-  implementation "androidx.credentials:credentials-play-services-auth:1.2.0-rc01"
-  implementation "androidx.credentials:credentials:1.2.0-rc01"
+  implementation "androidx.credentials:credentials-play-services-auth:1.2.2"
+  implementation "androidx.credentials:credentials:1.2.2"
 
   // Kotlin Coroutines
-  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1'
-  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
+  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
 }
 
 if (isNewArchitectureEnabled()) {
