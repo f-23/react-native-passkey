@@ -3,16 +3,14 @@
 
 @interface RCT_EXTERN_MODULE(Passkey, NSObject)
 
-RCT_EXTERN_METHOD(register:(NSString)identifier
-                  withChallenge:(NSString)challenge
-                  withDisplayName:(NSString) displayName
-                  withUserId:(NSString) userId
-                  withSecurityKey: (BOOL) securityKey
-                  withResolver:(RCTPromiseResolveBlock)resolve
-                  withRejecter:(RCTPromiseRejectBlock)reject);
+RCT_EXTERN_METHOD(register:(NSString)request
+                            withPlatformKey:(BOOL) platformKey
+                            withSecurityKey:(BOOL) securityKey
+                            withResolver:(RCTPromiseResolveBlock)resolve
+                            withRejecter:(RCTPromiseRejectBlock)reject);
 
-RCT_EXTERN_METHOD(authenticate:(NSString)identifier
-                  withChallenge:(NSString)challenge
+RCT_EXTERN_METHOD(authenticate:(NSString)request
+                  withPlatformKey:(BOOL) platformKey
                   withSecurityKey:(BOOL) securityKey
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject);

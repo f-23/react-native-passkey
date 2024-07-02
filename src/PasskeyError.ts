@@ -49,6 +49,11 @@ export const InterruptedError: PasskeyError = {
   message: 'The operation was interrupted and may be retried.',
 };
 
+export const TimeoutError: PasskeyError = {
+  error: 'TimedOut',
+  message: 'The operation timed out.',
+};
+
 export const NativeError = (
   message = 'An unknown error occurred'
 ): PasskeyError => {
@@ -87,11 +92,14 @@ export function handleNativeError(_error: unknown): PasskeyError {
     case 'NoCredentials': {
       return NoCredentialsError;
     }
+    case 'TimedOut': {
+      return TimeoutError;
+    }
     case 'UnknownError': {
       return UnknownError;
     }
     default: {
-      return NativeError(error);
+      return NativeError(String(_error));
     }
   }
 }

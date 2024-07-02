@@ -3,7 +3,9 @@ import type {
   PasskeyRegistrationRequest,
   PasskeyAuthenticationRequest,
   PasskeyAuthenticationResult,
-} from './Passkey';
+  PasskeyiOSRegistrationResult,
+  PasskeyiOSAuthenticationResult,
+} from './PasskeyTypes';
 import { handleNativeError } from './PasskeyError';
 import { NativePasskey } from './NativePasskey';
 
@@ -17,38 +19,19 @@ export class PasskeyiOS {
    */
   public static async register(
     request: PasskeyRegistrationRequest,
-    withSecurityKey = false
+    enablePlatformKey = true,
+    enableSecurityKey = true
   ): Promise<PasskeyRegistrationResult> {
-    // Extract the required data from the attestation request
-    const { rpId, challenge, name, userID } =
-      this.prepareRegistrationRequest(request);
-
     try {
       const response = await NativePasskey.register(
-        rpId,
-        challenge,
-        name,
-        userID,
-        withSecurityKey
+        JSON.stringify(request),
+        enablePlatformKey,
+        enableSecurityKey
       );
       return this.handleNativeRegistrationResult(response);
     } catch (error) {
       throw handleNativeError(error);
     }
-  }
-
-  /**
-   * Extracts the data required for the attestation process on iOS from a given request
-   */
-  private static prepareRegistrationRequest(
-    request: PasskeyRegistrationRequest
-  ): PasskeyiOSRegistrationData {
-    return {
-      rpId: request.rp.id,
-      challenge: request.challenge,
-      name: request.user.displayName,
-      userID: request.user.id,
-    };
   }
 
   /**
@@ -58,6 +41,7 @@ export class PasskeyiOS {
     result: PasskeyiOSRegistrationResult
   ): PasskeyRegistrationResult {
     return {
+      type: 'public-key',
       id: result.credentialID,
       rawId: result.credentialID,
       response: {
@@ -76,13 +60,14 @@ export class PasskeyiOS {
    */
   public static async authenticate(
     request: PasskeyAuthenticationRequest,
-    withSecurityKey = false
+    enablePlatformKey = true,
+    enableSecurityKey = true
   ): Promise<PasskeyAuthenticationResult> {
     try {
       const response = await NativePasskey.authenticate(
-        request.rpId,
-        request.challenge,
-        withSecurityKey
+        JSON.stringify(request),
+        enablePlatformKey,
+        enableSecurityKey
       );
       return this.handleNativeAuthenticationResult(response);
     } catch (error) {
@@ -97,6 +82,7 @@ export class PasskeyiOS {
     result: PasskeyiOSAuthenticationResult
   ): PasskeyAuthenticationResult {
     return {
+      type: 'public-key',
       id: result.credentialID,
       rawId: result.credentialID,
       response: {
@@ -107,29 +93,4 @@ export class PasskeyiOS {
       },
     };
   }
-}
-
-interface PasskeyiOSRegistrationData {
-  rpId: string;
-  challenge: string;
-  name: string;
-  userID: string;
-}
-
-interface PasskeyiOSRegistrationResult {
-  credentialID: string;
-  response: {
-    rawAttestationObject: string;
-    rawClientDataJSON: string;
-  };
-}
-
-interface PasskeyiOSAuthenticationResult {
-  credentialID: string;
-  userID: string;
-  response: {
-    rawAuthenticatorData: string;
-    rawClientDataJSON: string;
-    signature: string;
-  };
 }
