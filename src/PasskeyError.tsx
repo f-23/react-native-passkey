@@ -91,7 +91,7 @@ export function handleNativeError(_error: unknown): PasskeyError {
       return UnknownError;
     }
     default: {
-      return NativeError(error);
+      return NativeError(String(_error));
     }
   }
 }
