@@ -112,7 +112,7 @@ const isSupported: boolean = Passkey.isSupported();
 import { Passkey, PasskeyRegistrationResult } from 'react-native-passkey';
 
 // Retrieve a valid FIDO2 attestation request from your server
-// The challenge inside the request needs to be a base64 encoded string
+// The challenge inside the request needs to be a base64URL encoded string
 // There are plenty of libraries which can be used for this (e.g. fido2-lib)
 
 try {
@@ -133,7 +133,7 @@ try {
 import { Passkey, PasskeyAuthenticationResult } from 'react-native-passkey';
 
 // Retrieve a valid FIDO2 assertion request from your server 
-// The challenge inside the request needs to be a base64 encoded string
+// The challenge inside the request needs to be a base64URL encoded string
 // There are plenty of libraries which can be used for this (e.g. fido2-lib)
 
 try {
