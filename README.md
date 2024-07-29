@@ -4,9 +4,6 @@
 
 Native Passkeys on iOS 15.0+ and Android API 28+ using React Native.
 
-> Please note that Android support is still in alpha. ([More info](https://developer.android.com/jetpack/androidx/releases/credentials))
->
-> Progress is being tracked [here](https://github.com/f-23/react-native-passkey/issues/2).
 
 ## Installation
 
@@ -119,11 +116,11 @@ import { Passkey, PasskeyRegistrationResult } from 'react-native-passkey';
 // There are plenty of libraries which can be used for this (e.g. fido2-lib)
 
 try {
-  // Call the `register` method with the retrieved request in JSON format
+  // Call the `create` method with the retrieved request in JSON format
   // A native overlay will be displayed
-  const result: PasskeyRegistrationResult = await Passkey.register(requestJson);
+  const result: PasskeyRegistrationResult = await Passkey.create(requestJson);
 
-  // The `register` method returns a FIDO2 attestation result
+  // The `create` method returns a FIDO2 attestation result
   // Pass it to your server for verification
 } catch (error) {
   // Handle Error...
@@ -140,38 +137,32 @@ import { Passkey, PasskeyAuthenticationResult } from 'react-native-passkey';
 // There are plenty of libraries which can be used for this (e.g. fido2-lib)
 
 try {
-  // Call the `authenticate` method with the retrieved request in JSON format 
+  // Call the `get` method with the retrieved request in JSON format 
   // A native overlay will be displayed
-  const result: PasskeyAuthResult = await Passkey.authenticate(requestJson);
+  const result: PasskeyAuthResult = await Passkey.get(requestJson);
 
-  // The `authenticate` method returns a FIDO2 assertion result
+  // The `get` method returns a FIDO2 assertion result
   // Pass it to your server for verification
 } catch (error) {
   // Handle Error...
 }
 ```
 
-### Security Keys (iOS-only)
+### Security Keys (iOS-specific)
 
-You can allow users to register and authenticate using a Security Key (like [Yubikey](https://www.yubico.com/)).
+You can allow or disallow users to register using a Security Key (like [Yubikey](https://www.yubico.com/)).
 
-For this just pass an options object containing `{ withSecurityKey: true }` to the `Passkey.authenticate()` or `Passkey.register()` methods.
+For this just set the `authenticatorAttachment` field in your Passkey request to `platform` or `cross-platform`, depending on your preference.
 
-```ts
-const result: PasskeyAuthResult = await Passkey.authenticate(
-  requestJson,
-  { withSecurityKey: true }
-);
-```
+### Extensions
 
-or
+#### largeBlob
 
-```ts
-const result: PasskeyRegistrationResult = await Passkey.register(
-  requestJson,
-  { withSecurityKey: true }
-);
-```
+As of version 3.0 the newly added largeBlob extension should work out of the box for both iOS and Android.
+
+#### PRF
+
+As of version 3.0 the newly added largeBlob extension should work out of the box for Android only.
 
 ---
 
