@@ -43,9 +43,10 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
   }
 
   private fun handleRegistrationException(e: CreateCredentialException): String {
+    e.printStackTrace()
     when (e) {
       is CreatePublicKeyCredentialDomException -> {
-        return e.domError.toString()
+        return e.errorMessage.toString()
       }
       is CreateCredentialCancellationException -> {
         return "UserCancelled"
@@ -63,7 +64,7 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
         return "NotSupported"
       }
       else -> {
-        return e.toString()
+        return e.errorMessage.toString()
       }
     }
   }
@@ -89,9 +90,10 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
   }
 
   private fun handleAuthenticationException(e: GetCredentialException): String {
+    e.printStackTrace()
     when (e) {
       is GetPublicKeyCredentialDomException -> {
-        return e.domError.toString()
+        return e.errorMessage.toString()
       }
       is GetCredentialCancellationException -> {
         return "UserCancelled"
@@ -112,7 +114,7 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
         return "NoCredentials"
       }
       else -> {
-        return e.toString()
+        return e.errorMessage.toString()
       }
     }
   }
