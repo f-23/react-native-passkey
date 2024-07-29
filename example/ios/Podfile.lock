@@ -606,7 +606,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: a60e1117c011cbb6a95418f4bf67d6dfbbf81772
   React-jsinspector: 7218c92923292e20326a1eed3104fe90393ca449
   React-logger: 166cf6649b5ea9e26ab816073dd0e68020561d65
-  react-native-passkey: 29ff814a83dfd4311478498e71a801dce68043ac
+  react-native-passkey: b2125378c7fe3638349acc7dc37e90721d22fb8a
   React-perflogger: c8849042b03392681ebd5d99a0775dbadfad2c74
   React-RCTActionSheet: 6bd3b502da266d69942e9ce4bc13666f90544620
   React-RCTAnimation: 63fbec04ae279b387ac786898bd5a918b8875f48

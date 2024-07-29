@@ -1,208 +1,237 @@
 import AuthenticationServices
 
+@available(iOS 15.0, *)
+struct RNPasskeyHandler {
+  var resolve: RCTPromiseResolveBlock
+  var reject: RCTPromiseRejectBlock
+  
+  init(_ resolve: @escaping RCTPromiseResolveBlock, _ reject: @escaping RCTPromiseRejectBlock) {
+    self.resolve = resolve
+    self.reject = reject
+  }
+}
+
 @objc(Passkey)
 @available(iOS 15.0, *)
-class Passkey: NSObject {
-  var passKeyDelegate: PasskeyDelegate?;
+class Passkey: NSObject, RNPasskeyResultHandler {
+  var passkeyDelegate: PasskeyDelegate?;
+  var passkeyHandler: RNPasskeyHandler?;
 
   /**
-   Main registration entrypoint
+   Main create entrypoint
    */
-  @objc(register:withPlatformKey:withSecurityKey:withResolver:withRejecter:)
-  func register(_ request: String, platformKey: Bool, securityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+  @objc(create:withResolver:withRejecter:)
+  func create(_ request: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
     do {
+      passkeyHandler = RNPasskeyHandler(resolve, reject);
+      
       // Decode request object
       let requestData = request.data(using: .utf8)!;
-      let requestJSON = try JSONDecoder().decode(RNPasskeyRegistrationRequest.self, from: requestData);
+      let requestJSON = try JSONDecoder().decode(RNPasskeyCredentialCreationOptions.self, from: requestData);
       
-      // Convert challenge and userId to correct type
-      guard let challengeData: Data = Data(base64Encoded: Base64Helper.toBase64(base64URL: requestJSON.challenge)) else {
-        reject(RNPasskeyError.invalidChallenge.rawValue, RNPasskeyError.invalidChallenge.rawValue, nil);
+      // Convert challenge to Data
+      guard let challenge: Data = Data(base64URLEncoded: requestJSON.challenge) else {
+        handleError(RNPasskeyError(type: .invalidChallenge));
         return;
       }
       
-      // Set up a PasskeyDelegate instance with a callback function
-      self.passKeyDelegate = PasskeyDelegate(completionHandler: { error, result in
-        self.registrationCallback(error: error, result: result, resolve: resolve, reject: reject);
-      })
-      
-      if let passKeyDelegate = self.passKeyDelegate {
-            // Get authorization requests
-        let platformKeyRequest: ASAuthorizationRequest = self.configureRegistrationPlatformRequest(challenge: challengeData, request: requestJSON);
-        let securityKeyRequest: ASAuthorizationRequest = self.configureRegistrationSecurityKeyRequest(challenge: challengeData, request: requestJSON);
-        
-        // Get authorization controller
-        let authController: ASAuthorizationController = self.configureAuthController(platformKey: platformKey, platformKeyRequest: platformKeyRequest, securityKey: securityKey, securityKeyRequest: securityKeyRequest);
-        
-        // Perform the authorization
-        passKeyDelegate.performAuthForController(controller: authController);
+      // Convert userId to Data
+      guard let userId: Data = Data(base64URLEncoded: requestJSON.user.id) else {
+        handleError(RNPasskeyError(type: .invalidUser));
+        return;
       }
+      
+      // Create requests
+      let platformKeyRequest: ASAuthorizationRequest = self.configureCreatePlatformRequest(challenge: challenge, userId: userId, request: requestJSON);
+      let securityKeyRequest: ASAuthorizationRequest = self.configureCreateSecurityKeyRequest(challenge: challenge, userId: userId, request: requestJSON);
+        
+      // Get authorization controller
+      let authController: ASAuthorizationController = self.configureAuthController(authenticatorAttachement: requestJSON.authenticatorSelection?.authenticatorAttachment, platformKeyRequest: platformKeyRequest, securityKeyRequest: securityKeyRequest);
+
+      let passkeyDelegate = PasskeyDelegate(completionHandler: self);
+      
+      // Keep a reference to the delegate object
+      self.passkeyDelegate = passkeyDelegate;
+      
+      // Perform the authorization
+      passkeyDelegate.performAuthForController(controller: authController);
+
+    } catch let error as NSError {
+      print(error.localizedDescription);
+      handleError(handleErrorCode(error: error));
+    }
+  }
+
+  /**
+   Main get entrypoint
+   */
+  @objc(get:withResolver:withRejecter:)
+  func get(_ request: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    do {
+      passkeyHandler = RNPasskeyHandler(resolve, reject);
+      
+      // Decode request object
+      let requestData = request.data(using: .utf8)!;
+      let requestJSON = try JSONDecoder().decode(RNPasskeyCredentialRequestOptions.self, from: requestData);
+      
+      // Convert challenge to Data
+      guard let challenge: Data = Data(base64URLEncoded: requestJSON.challenge) else {
+        handleError(RNPasskeyError(type: .invalidChallenge));
+        return;
+      }
+      
+      let platformKeyRequest: ASAuthorizationRequest = self.configureGetPlatformRequest(challenge: challenge, request: requestJSON);
+      let securityKeyRequest: ASAuthorizationRequest = self.configureGetSecurityKeyRequest(challenge: challenge, request: requestJSON);
+      
+      // Get authorization controller
+      let authController: ASAuthorizationController = self.configureAuthController(platformKeyRequest: platformKeyRequest, securityKeyRequest: securityKeyRequest);
+      
+      let passkeyDelegate = PasskeyDelegate(completionHandler: self);
+      
+      // Keep a reference to the delegate object
+      self.passkeyDelegate = passkeyDelegate;
+
+      // Perform the authorization
+      passkeyDelegate.performAuthForController(controller: authController);
+      
     } catch let error as NSError {
       reject(error.debugDescription, error.debugDescription, nil);
     }
   }
   
-  /**
-   Process registration result
-   */
-  private func registrationCallback(error: Error?, result: RNPasskeyResult?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
-    // Check if authorization process returned an error and throw if thats the case
-    if (error != nil) {
-      let passkeyError = self.handleErrorCode(error: error!);
-      reject(passkeyError, passkeyError, nil);
-      return;
+  func onSuccess(_ data: PublicKeyCredentialJSON) {
+    guard let handler = passkeyHandler else {
+      print("passkeyHandler was nil");
+      return
     }
     
-    // Check if the result object contains a valid registration result
-    if let registrationResult = result?.registrationResult {
-      // Return a NSDictionary instance with the received authorization data
-      let authResponse: NSDictionary = [
-        "rawAttestationObject": Base64Helper.toBase64URL(data: registrationResult.rawAttestationObject),
-        "rawClientDataJSON": Base64Helper.toBase64URL(data: registrationResult.rawClientDataJSON)
-      ];
-      
-      let authResult: NSDictionary = [
-        "transports": registrationResult.transports ?? [],
-        "credentialID": Base64Helper.toBase64URL(data: registrationResult.credentialID),
-        "response": authResponse,
-      ]
-      resolve(authResult);
-    } else {
-      // If result didn't contain a valid registration result throw an error
-      reject(RNPasskeyError.requestFailed.rawValue, RNPasskeyError.requestFailed.rawValue, nil);
-    }
-  }
-
-  /**
-   Main authentication entrypoint
-   */
-  @objc(authenticate:withPlatformKey:withSecurityKey:withResolver:withRejecter:)
-  func authenticate(_ request: String, platformKey: Bool, securityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
     do {
-      // Decode request object
-      let requestData = request.data(using: .utf8)!;
-      let requestJSON = try JSONDecoder().decode(RNPasskeyAuthenticationRequest.self, from: requestData);
-      
-      // Convert challenge to correct type
-      guard let challengeData: Data = Data(base64Encoded: Base64Helper.toBase64(base64URL: requestJSON.challenge)) else {
-        reject(RNPasskeyError.invalidChallenge.rawValue, RNPasskeyError.invalidChallenge.rawValue, nil);
-        return;
-      }
-      
-      // Set up a PasskeyDelegate instance with a callback function
-      self.passKeyDelegate = PasskeyDelegate { error, result in
-        self.authenticationCallback(error: error, result: result, resolve: resolve, reject: reject);
-      }
-      
-      if let passKeyDelegate = self.passKeyDelegate {
-        // Get authorization requests
-        let platformKeyRequest: ASAuthorizationRequest = self.configureAuthenticationPlatformRequest(challenge: challengeData, request: requestJSON);
-        let securityKeyRequest: ASAuthorizationRequest = self.configureAuthenticationSecurityKeyRequest(challenge: challengeData, request: requestJSON);
-        
-        // Get authorization controller
-        let authController: ASAuthorizationController = self.configureAuthController(platformKey: platformKey, platformKeyRequest: platformKeyRequest, securityKey: securityKey, securityKeyRequest: securityKeyRequest);
-        
-        // Perform the authorization
-        passKeyDelegate.performAuthForController(controller: authController);
+      switch data {
+      case .create(let createResponse):
+        let data = try JSONEncoder().encode(createResponse);
+        handler.resolve(String(data: data, encoding: .utf8));
+        return
+      case .get(let getResponse):
+        let data = try JSONEncoder().encode(getResponse);
+        handler.resolve(String(data: data, encoding: .utf8));
       }
     } catch let error as NSError {
-      reject(error.debugDescription, error.debugDescription, nil);
+      handler.reject(error.debugDescription, error.debugDescription, nil);
     }
   }
   
-  /**
-   Process authentication result
-   */
-  private func authenticationCallback(error: Error?, result: RNPasskeyResult?, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
-    // Check if authorization process returned an error and throw if thats the case
-    if (error != nil) {
-      let passkeyError = self.handleErrorCode(error: error!);
-      reject(passkeyError, passkeyError, nil);
-      return;
-    }
-    // Check if the result object contains a valid authentication result
-    if let assertionResult = result?.assertionResult {
-      // Return a NSDictionary instance with the received authorization data
-      let authResponse: NSDictionary = [
-        "rawAuthenticatorData": Base64Helper.toBase64URL(data: assertionResult.rawAuthenticatorData),
-        "rawClientDataJSON": Base64Helper.toBase64URL(data: assertionResult.rawClientDataJSON),
-        "signature": Base64Helper.toBase64URL(data: assertionResult.signature),
-      ];
-      
-      let authResult: NSDictionary = [
-        "credentialID": Base64Helper.toBase64URL(data: assertionResult.credentialID),
-        "userID": String(decoding: assertionResult.userID, as: UTF8.self),
-        "response": authResponse
-      ]
-      resolve(authResult);
-    } else {
-      // If result didn't contain a valid authentication result throw an error
-      reject(RNPasskeyError.requestFailed.rawValue, RNPasskeyError.requestFailed.rawValue, nil);
-    }
+  func onError(_ error: any Error) {
+    handleError(handleErrorCode(error: error));
   }
   
   /**
-   Creates and returns security key registration request
+   Creates and returns security key create request
    */
-  private func configureRegistrationSecurityKeyRequest(challenge: Data, request: RNPasskeyRegistrationRequest) -> ASAuthorizationSecurityKeyPublicKeyCredentialRegistrationRequest {
-    let userIdData: Data = RCTConvert.nsData(request.user.id);
-    let securityKeyProvider = ASAuthorizationSecurityKeyPublicKeyCredentialProvider(relyingPartyIdentifier: request.rp.id);
+  private func configureCreateSecurityKeyRequest(challenge: Data, userId: Data, request: RNPasskeyCredentialCreationOptions) -> ASAuthorizationSecurityKeyPublicKeyCredentialRegistrationRequest {
+    
+    let securityKeyProvider = ASAuthorizationSecurityKeyPublicKeyCredentialProvider(relyingPartyIdentifier: request.rp.id!);
 
-    // Configure auth request
-    let authRequest = securityKeyProvider.createCredentialRegistrationRequest(challenge: challenge, displayName: request.user.displayName ?? "", name: request.user.name ?? "", userID: userIdData);
-    authRequest.credentialParameters = [ ASAuthorizationPublicKeyCredentialParameters(algorithm: ASCOSEAlgorithmIdentifier.ES256) ];
-    authRequest.excludedCredentials = self.transformDescriptorsForSecurityKey(credentials: request.excludeCredentials);
-    authRequest.attestationPreference = ASAuthorizationPublicKeyCredentialAttestationKind(request.attestation ?? "none")
-    authRequest.residentKeyPreference = ASAuthorizationPublicKeyCredentialResidentKeyPreference(request.authenticatorSelection.residentKey ?? "preferred");
-    authRequest.userVerificationPreference = ASAuthorizationPublicKeyCredentialUserVerificationPreference(request.authenticatorSelection.userVerification ?? "preferred");
+    let authRequest = securityKeyProvider.createCredentialRegistrationRequest(challenge: challenge, 
+                                                                              displayName: request.user.displayName,
+                                                                              name: request.user.name,
+                                                                              userID: userId);
     
-    return authRequest;
-  }
-  
-  /**
-   Creates and returns platform key registration request
-   */
-  private func configureRegistrationPlatformRequest(challenge: Data, request: RNPasskeyRegistrationRequest) -> ASAuthorizationPlatformPublicKeyCredentialRegistrationRequest {
-    let userIdData: Data = RCTConvert.nsData(request.user.id);
-    let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: request.rp.id);
-    
-    // Configure auth request
-    let authRequest = platformProvider.createCredentialRegistrationRequest(challenge: challenge, name: request.user.name ?? "", userID: userIdData);
+    authRequest.credentialParameters = request.pubKeyCredParams.map({ $0.appleise() })
     if #available(iOS 17.4, *) {
-      authRequest.excludedCredentials = self.transformDescriptorsForPlatform(credentials: request.excludeCredentials)
+      if let excludeCredentials = request.excludeCredentials {
+        authRequest.excludedCredentials = excludeCredentials.map({ $0.getCrossPlatformDescriptor() })
+      }
     }
-    authRequest.userVerificationPreference = ASAuthorizationPublicKeyCredentialUserVerificationPreference(request.authenticatorSelection.userVerification ?? "preferred");
+    
+    if let residentCredPref = request.authenticatorSelection?.residentKey {
+      authRequest.residentKeyPreference = residentCredPref.appleise()
+    }
+    
+    if let userVerificationPref = request.authenticatorSelection?.userVerification {
+      authRequest.userVerificationPreference = userVerificationPref.appleise()
+    }
+    
+    if let rpAttestationPref = request.attestation {
+      authRequest.attestationPreference = rpAttestationPref.appleise()
+    }
+    
+    return authRequest;
+  }
+  
+  /**
+   Creates and returns platform key create request
+   */
+  private func configureCreatePlatformRequest(challenge: Data, userId: Data, request: RNPasskeyCredentialCreationOptions) -> ASAuthorizationPlatformPublicKeyCredentialRegistrationRequest {
+
+    let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: request.rp.id!);
+    
+    let authRequest = platformProvider.createCredentialRegistrationRequest(challenge: challenge, 
+                                                                           name: request.user.name,
+                                                                           userID: userId);
+    
+    if #available(iOS 17.0, *) {
+      if let largeBlob = request.extensions?.largeBlob {
+        authRequest.largeBlob = largeBlob.support?.appleise()
+      }
+    }
+    
+    if #available(iOS 17.4, *) {
+      if let excludeCredentials = request.excludeCredentials {
+        authRequest.excludedCredentials = excludeCredentials.map({ $0.getPlatformDescriptor() })
+      }
+    }
+    
+    if let userVerificationPref = request.authenticatorSelection?.userVerification {
+      authRequest.userVerificationPreference = userVerificationPref.appleise()
+    }
 
     return authRequest;
   }
   
   /**
-   Creates and returns security key authentication request
+   Creates and returns platform key get request
    */
-  private func configureAuthenticationSecurityKeyRequest(challenge: Data, request: RNPasskeyAuthenticationRequest) -> ASAuthorizationSecurityKeyPublicKeyCredentialAssertionRequest {
+  private func configureGetPlatformRequest(challenge: Data, request: RNPasskeyCredentialRequestOptions) -> ASAuthorizationPlatformPublicKeyCredentialAssertionRequest {
+    
+    let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: request.rpId);
+    let authRequest = platformProvider.createCredentialAssertionRequest(challenge: challenge);
+    
+    if #available(iOS 17.0, *) {
+      if request.extensions?.largeBlob?.read == true {
+        authRequest.largeBlob = ASAuthorizationPublicKeyCredentialLargeBlobAssertionInput.read;
+      }
+      
+      if let largeBlobWriteData = request.extensions?.largeBlob?.write {
+        authRequest.largeBlob = ASAuthorizationPublicKeyCredentialLargeBlobAssertionInput.write(largeBlobWriteData)
+      }
+    }
+    
+    if let allowCredentials = request.allowCredentials {
+      authRequest.allowedCredentials = allowCredentials.map({ $0.getPlatformDescriptor() })
+    }
+    
+    if let userVerificationPref = request.userVerification {
+      authRequest.userVerificationPreference = userVerificationPref.appleise()
+    }
+    
+    return authRequest;
+  }
+  
+  /**
+   Creates and returns security key get request
+   */
+  private func configureGetSecurityKeyRequest(challenge: Data, request: RNPasskeyCredentialRequestOptions) -> ASAuthorizationSecurityKeyPublicKeyCredentialAssertionRequest {
+    
     let securityKeyProvider = ASAuthorizationSecurityKeyPublicKeyCredentialProvider(relyingPartyIdentifier: request.rpId);
     
-    // Configure auth request
     let authRequest = securityKeyProvider.createCredentialAssertionRequest(challenge: challenge);
-    authRequest.allowedCredentials = self.transformDescriptorsForSecurityKey(credentials: request.allowCredentials);
-    if let userVerification = request.userVerification {
-      authRequest.userVerificationPreference = ASAuthorizationPublicKeyCredentialUserVerificationPreference(userVerification);
+    
+    if let allowCredentials = request.allowCredentials {
+      authRequest.allowedCredentials = allowCredentials.map({ $0.getCrossPlatformDescriptor() })
     }
     
-    return authRequest;
-  }
-  
-  /**
-   Creates and returns platform key authentication request
-   */
-  private func configureAuthenticationPlatformRequest(challenge: Data, request: RNPasskeyAuthenticationRequest) -> ASAuthorizationPlatformPublicKeyCredentialAssertionRequest {
-    let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: request.rpId);
-    
-    // Configure auth request
-    let authRequest = platformProvider.createCredentialAssertionRequest(challenge: challenge);
-    authRequest.allowedCredentials = self.transformDescriptorsForPlatform(credentials: request.allowCredentials);
-    if let userVerification = request.userVerification {
-      authRequest.userVerificationPreference = ASAuthorizationPublicKeyCredentialUserVerificationPreference(userVerification)
+    if let userVerificationPref = request.userVerification {
+      authRequest.userVerificationPreference = userVerificationPref.appleise()
     }
     
     return authRequest;
@@ -211,198 +240,44 @@ class Passkey: NSObject {
   /**
    Creates and returns authorization controller depending on selected request types
    */
-  private func configureAuthController(platformKey: Bool, platformKeyRequest: ASAuthorizationRequest, securityKey: Bool, securityKeyRequest: ASAuthorizationRequest) -> ASAuthorizationController {
+  private func configureAuthController(authenticatorAttachement: AuthenticatorAttachment? = .crossPlatform, platformKeyRequest: ASAuthorizationRequest, securityKeyRequest: ASAuthorizationRequest) -> ASAuthorizationController {
     // Determine if we show platformKeyRequest, securityKeyRequest, or both
-    var authorizationRequests: [ASAuthorizationRequest] = []
+    var authorizationRequests: [ASAuthorizationRequest] = [platformKeyRequest]
 
-    if (platformKey || securityKey) {
-      if (platformKey) {
-        authorizationRequests.append(platformKeyRequest);
-      }
-      if (securityKey) {
-        authorizationRequests.append(securityKeyRequest);
-      }
-    } else {
-      // Default to platform key request
-      authorizationRequests.append(platformKeyRequest);
+    if (authenticatorAttachement == .crossPlatform) {
+      authorizationRequests.append(securityKeyRequest);
     }
     
     // Create auth controller
     return ASAuthorizationController(authorizationRequests: authorizationRequests);
   }
-
-  /**
-   Turns RN platform key credential descriptors into native Swift credential descriptors
-   */
-  private func transformDescriptorsForSecurityKey(credentials: [RNPasskeyCredential]?) -> [ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor] {
-    guard let credentialsData = credentials else {
-      return [];
-    }
-    
-    return credentialsData.compactMap { (credential: RNPasskeyCredential) -> ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor? in
-      guard let credId: Data = Data(base64Encoded: credential.id) else {
-        return nil;
-      }
-      
-      guard let transportsData = credential.transports else {
-        return nil;
-      }
-      
-      let transports: [ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport] = transportsData.compactMap { transport in
-        return ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport(transport);
-      }
-      
-      return ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor(credentialID: credId, transports: transports);
-    }
-  }
-  
-  /**
-   Turns RN security key credential descriptors into native Swift credential descriptors
-   */
-  private func transformDescriptorsForPlatform(credentials: [RNPasskeyCredential]?) -> [ASAuthorizationPlatformPublicKeyCredentialDescriptor] {
-    guard let credentialsData = credentials else {
-      return [];
-    }
-    
-    return credentialsData.compactMap { credential in
-      guard let credId: Data = Data(base64Encoded: credential.id) else {
-        return nil;
-      }
-      
-      return ASAuthorizationPlatformPublicKeyCredentialDescriptor(credentialID: credId);
-    }
-  }
   
   /**
    Handles ASAuthorization error codes
   */
-  private func handleErrorCode(error: Error) -> String {
+  private func handleErrorCode(error: Error) -> RNPasskeyError {
     let errorCode = (error as NSError).code;
     switch errorCode {
       case 1001:
-      return RNPasskeyError.cancelled.rawValue;
+      return RNPasskeyError(type: .cancelled, message: error.localizedDescription);
       case 1004:
-      return (error as NSError).localizedDescription;
+      return RNPasskeyError(type: .requestFailed, message: error.localizedDescription);
       case 4004:
-      return RNPasskeyError.notConfigured.rawValue;
+      return RNPasskeyError(type: .badConfiguration, message: error.localizedDescription);
       case 31:
-      return RNPasskeyError.timedOut.rawValue;
+      return RNPasskeyError(type: .timedOut, message: error.localizedDescription);
       default:
-      return RNPasskeyError.unknown.rawValue;
+      return RNPasskeyError(type: .unknown, message: error.localizedDescription);
     }
   }
-}
-
-/**
- Base64 helper functions
- */
-class Base64Helper {
-  public static func toBase64URL(base64: String) -> String {
-    return base64
-      .replacingOccurrences(of: "+", with: "-")
-      .replacingOccurrences(of: "/", with: "_")
-      .replacingOccurrences(of: "=", with: "");
-  }
   
-  public static func toBase64URL(data: Data) -> String {
-    return self.toBase64URL(base64: data.base64EncodedString());
-  }
-  
-  public static func toBase64(base64URL: String) -> String {
-    var base64 = base64URL
-        .replacingOccurrences(of: "-", with: "+")
-        .replacingOccurrences(of: "_", with: "/");
-    if base64.count % 4 != 0 {
-      base64.append(String(repeating: "=", count: 4 - base64.count % 4));
+  private func handleError(_ error: RNPasskeyError) {
+    guard let handler = passkeyHandler else {
+      print("passkeyHandler was nil");
+      return
     }
-    return base64;
+    
+    handler.reject(error.type.rawValue, error.message, nil);
   }
 }
 
-struct RNPasskeyCredential: Decodable {
-  var type: String
-  var id: String
-  var transports: [String]?
-}
-
-struct RNPasskeyRelyingParty: Decodable {
-  var id: String
-}
-
-struct RNPasskeyUser: Decodable {
-  var id: String
-  var displayName: String?
-  var name: String?
-}
-
-struct RNPasskeyAuthenticatorSelection: Decodable {
-  let residentKey: String?
-  let userVerification: String?
-  let authenticatorAttachment: String?
-  let requireResidentKey: Bool
-}
-
-struct RNPasskeyRegistrationRequest: Decodable {
-  let challenge: String
-  let rp: RNPasskeyRelyingParty
-  let user: RNPasskeyUser
-  let excludeCredentials: [RNPasskeyCredential]?
-  let authenticatorSelection: RNPasskeyAuthenticatorSelection
-  let attestation: String?
-}
-
-struct RNPasskeyAuthenticationRequest: Decodable {
-  let challenge: String
-  let rpId: String
-  let allowCredentials: [RNPasskeyCredential]?
-  let userVerification: String?
-}
-
-enum RNPasskeyError: String, Error {
-  case notSupported = "NotSupported"
-  case requestFailed = "RequestFailed"
-  case cancelled = "UserCancelled"
-  case invalidChallenge = "InvalidChallenge"
-  case invalidCredential = "InvalidCredential"
-  case notConfigured = "NotConfigured"
-  case timedOut = "TimedOut"
-  case unknown = "UnknownError"
-}
-
-@available(iOS 15.0, *)
-struct RNPasskeyAuthRegistrationResult {
-  var passkey: RNPasskeyRegistrationResult
-  var type: RNPasskeyOperation
-}
-
-struct RNPasskeyAuthAssertionResult {
-  var passkey: RNPasskeyAssertionResult
-  var type: RNPasskeyOperation
-}
-
-@available(iOS 15.0, *)
-struct RNPasskeyResult {
-  var registrationResult: RNPasskeyRegistrationResult?
-  var assertionResult: RNPasskeyAssertionResult?
-}
-
-@available(iOS 15.0, *)
-struct RNPasskeyRegistrationResult {
-  var credentialID: Data
-  var rawAttestationObject: Data
-  var rawClientDataJSON: Data
-  var transports: [ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport]?
-}
-
-struct RNPasskeyAssertionResult {
-  var credentialID: Data
-  var rawAuthenticatorData: Data
-  var rawClientDataJSON: Data
-  var signature: Data
-  var userID: Data
-}
-
-enum RNPasskeyOperation {
-  case Registration
-  case Assertion
-}

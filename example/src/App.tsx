@@ -16,7 +16,7 @@ export default function App() {
         ...RegRequest,
       };
 
-      const result = await Passkey.register(requestJson);
+      const result = await Passkey.create(requestJson);
 
       console.log('Registration result: ', result);
     } catch (e) {
@@ -31,41 +31,7 @@ export default function App() {
         ...AuthRequest,
       };
 
-      const result = await Passkey.authenticate(requestJson);
-
-      console.log('Authentication result: ', result);
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-  async function createAccountWithSecurityKey() {
-    try {
-      const requestJson = {
-        // ...Retrieve request from server
-        ...RegRequest,
-      };
-
-      const result = await Passkey.register(requestJson, {
-        withSecurityKey: true,
-      });
-
-      console.log('Registration result: ', result);
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-  async function authenticateAccountWithSecurityKey() {
-    try {
-      const requestJson = {
-        // ...Retrieve request from server
-        ...AuthRequest,
-      };
-
-      const result = await Passkey.authenticate(requestJson, {
-        withSecurityKey: true,
-      });
+      const result = await Passkey.get(requestJson);
 
       console.log('Authentication result: ', result);
     } catch (e) {
@@ -82,15 +48,7 @@ export default function App() {
     <View style={styles.container}>
       <TextInput placeholder="email" value={email} onChangeText={setEmail} />
       <Button title="Create Account" onPress={createAccount} />
-      <Button
-        title="Create Account with Security Key"
-        onPress={createAccountWithSecurityKey}
-      />
       <Button title="Authenticate" onPress={authenticateAccount} />
-      <Button
-        title="Authenticate with Security Key"
-        onPress={authenticateAccountWithSecurityKey}
-      />
       <Button title="isSupported?" onPress={isSupported} />
     </View>
   );

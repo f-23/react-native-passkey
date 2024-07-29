@@ -1,6 +1,6 @@
 {
   "name": "react-native-passkey",
-  "version": "2.1.1",
+  "version": "3.0.0",
   "description": "Passkey implementation for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -58,7 +58,7 @@
     "@release-it/conventional-changelog": "^5.0.0",
     "@types/jest": "^28.1.2",
     "@types/react": "~17.0.21",
-    "@types/react-native": "0.71.18",
+    "@types/react-native": "0.71.13",
     "commitlint": "^17.0.2",
     "eslint": "^8.4.1",
     "eslint-config-prettier": "^8.5.0",

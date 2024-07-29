@@ -17,46 +17,24 @@ describe('Test Passkey Module', () => {
   test('should return unsupported for Android Versions below 28', async () => {
     (Platform as any).setVersion('26');
 
-    expect(await Passkey.isSupported()).toBeFalsy();
+    expect(Passkey.isSupported()).toBeFalsy();
   });
 
   test('should call native register method', async () => {
     const registerSpy = jest
-      .spyOn(NativeModules.Passkey, 'register')
+      .spyOn(NativeModules.Passkey, 'create')
       .mockResolvedValue(JSON.stringify(RegAndroidResult));
 
-    await Passkey.register(RegRequest);
+    await Passkey.create(RegRequest);
     expect(registerSpy).toHaveBeenCalled();
   });
 
   test('should call native auth method', async () => {
     const authSpy = jest
-      .spyOn(NativeModules.Passkey, 'authenticate')
+      .spyOn(NativeModules.Passkey, 'get')
       .mockResolvedValue(JSON.stringify(AuthAndroidResult));
 
-    await Passkey.authenticate(AuthRequest);
-    expect(authSpy).toHaveBeenCalled();
-  });
-
-  test('should call native register method with security key enabled', async () => {
-    const registerSpy = jest
-      .spyOn(NativeModules.Passkey, 'register')
-      .mockResolvedValue(JSON.stringify(RegAndroidResult));
-
-    await Passkey.register(RegRequest, {
-      withSecurityKey: true,
-    });
-    expect(registerSpy).toHaveBeenCalled();
-  });
-
-  test('should call native auth method with security key enabled', async () => {
-    const authSpy = jest
-      .spyOn(NativeModules.Passkey, 'authenticate')
-      .mockResolvedValue(JSON.stringify(AuthAndroidResult));
-
-    await Passkey.authenticate(AuthRequest, {
-      withSecurityKey: true,
-    });
+    await Passkey.get(AuthRequest);
     expect(authSpy).toHaveBeenCalled();
   });
 });

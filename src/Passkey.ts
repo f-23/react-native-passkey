@@ -18,24 +18,18 @@ export class Passkey {
    * @returns The FIDO2 Attestation Result in JSON format
    * @throws
    */
-  public static async register(
-    request: PasskeyRegistrationRequest,
-    {
-      enablePlatformKey,
-      enableSecurityKey,
-    }: { enablePlatformKey?: boolean; enableSecurityKey?: boolean } = {
-      enablePlatformKey: true,
-      enableSecurityKey: true,
-    }
+  public static async create(
+    request: PasskeyRegistrationRequest
   ): Promise<PasskeyRegistrationResult> {
     if (!Passkey.isSupported()) {
       throw NotSupportedError;
     }
 
     if (Platform.OS === 'android') {
-      return PasskeyAndroid.register(request);
+      return PasskeyAndroid.create(request);
     }
-    return PasskeyiOS.register(request, enablePlatformKey, enableSecurityKey);
+
+    return PasskeyiOS.create(request);
   }
 
   /**
@@ -46,28 +40,17 @@ export class Passkey {
    * @returns The FIDO2 Assertion Result in JSON format
    * @throws
    */
-  public static async authenticate(
-    request: PasskeyAuthenticationRequest,
-    {
-      enablePlatformKey,
-      enableSecurityKey,
-    }: { enablePlatformKey?: boolean; enableSecurityKey?: boolean } = {
-      enablePlatformKey: true,
-      enableSecurityKey: true,
-    }
+  public static async get(
+    request: PasskeyAuthenticationRequest
   ): Promise<PasskeyAuthenticationResult> {
     if (!Passkey.isSupported()) {
       throw NotSupportedError;
     }
 
     if (Platform.OS === 'android') {
-      return PasskeyAndroid.authenticate(request);
+      return PasskeyAndroid.get(request);
     }
-    return PasskeyiOS.authenticate(
-      request,
-      enablePlatformKey,
-      enableSecurityKey
-    );
+    return PasskeyiOS.get(request);
   }
 
   /**

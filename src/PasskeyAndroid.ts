@@ -14,16 +14,15 @@ export class PasskeyAndroid {
    * @param request The FIDO2 Attestation Request in JSON format
    * @returns The FIDO2 Attestation Result in JSON format
    */
-  public static async register(
+  public static async create(
     request: PasskeyRegistrationRequest
   ): Promise<PasskeyRegistrationResult> {
-    const nativeRequest = this.prepareRequest(request);
-
     try {
-      const response = await NativePasskey.register(
-        JSON.stringify(nativeRequest)
+      const response: PasskeyRegistrationResult = await NativePasskey.create(
+        JSON.stringify(request)
       );
-      return this.handleNativeResponse(JSON.parse(response));
+
+      return response;
     } catch (error) {
       throw handleNativeError(error);
     }
@@ -35,54 +34,17 @@ export class PasskeyAndroid {
    * @param request The FIDO2 Assertion Request in JSON format
    * @returns The FIDO2 Assertion Result in JSON format
    */
-  public static async authenticate(
+  public static async get(
     request: PasskeyAuthenticationRequest
   ): Promise<PasskeyAuthenticationResult> {
-    const nativeRequest = this.prepareRequest(request);
-
     try {
-      const response = await NativePasskey.authenticate(
-        JSON.stringify(nativeRequest)
+      const response: PasskeyAuthenticationResult = await NativePasskey.get(
+        JSON.stringify(request)
       );
-      return this.handleNativeResponse(JSON.parse(response));
+
+      return response;
     } catch (error) {
       throw handleNativeError(error);
     }
-  }
-
-  /**
-   * Prepares the attestation or assertion request for Android
-   */
-  public static prepareRequest(request: { challenge: string }): object {
-    // Transform challenge from Base64 to Base64URL
-    const encodedChallenge = request.challenge
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_')
-      .replace(/\=+$/, '');
-
-    return {
-      ...request,
-      challenge: encodedChallenge,
-    };
-  }
-
-  /**
-   * Transform the attestation or assertion result
-   */
-  private static handleNativeResponse(
-    response: PasskeyRegistrationResult & PasskeyAuthenticationResult
-  ): PasskeyRegistrationResult & PasskeyAuthenticationResult {
-    // Transform Base64URL Response to Base64
-    let id = response.id;
-    if (id.length % 4 !== 0) {
-      id += '==='.slice(0, 4 - (id.length % 4));
-    }
-    id = id.replace(/-/g, '+').replace(/_/g, '/');
-
-    return {
-      ...response,
-      id,
-      rawId: id,
-    };
   }
 }

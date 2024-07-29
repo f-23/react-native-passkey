@@ -25,7 +25,7 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
   }
 
   @ReactMethod
-  fun register(requestJson: String, promise: Promise) {
+  fun create(requestJson: String, promise: Promise) {
     val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
     val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(requestJson)
 
@@ -69,7 +69,7 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
   }
 
   @ReactMethod
-  fun authenticate(requestJson: String, promise: Promise) {
+  fun get(requestJson: String, promise: Promise) {
       val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
       val getCredentialRequest =
         GetCredentialRequest(listOf(GetPublicKeyCredentialOption(requestJson)))

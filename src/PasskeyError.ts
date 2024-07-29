@@ -34,8 +34,8 @@ export const InvalidUserIdError: PasskeyError = {
   message: 'The provided userId was invalid',
 };
 
-export const NotConfiguredError: PasskeyError = {
-  error: 'NotConfigured',
+export const BadConfiguration: PasskeyError = {
+  error: 'BadConfiguration',
   message: 'Your app is not properly configured. Refer to the docs for help.',
 };
 
@@ -83,8 +83,8 @@ export function handleNativeError(_error: unknown): PasskeyError {
     case 'InvalidChallenge': {
       return InvalidChallengeError;
     }
-    case 'NotConfigured': {
-      return NotConfiguredError;
+    case 'BadConfiguration': {
+      return BadConfiguration;
     }
     case 'Interrupted': {
       return InterruptedError;

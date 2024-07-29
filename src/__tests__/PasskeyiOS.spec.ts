@@ -22,62 +22,19 @@ describe('Test Passkey Module', () => {
 
   test('should call native register method', async () => {
     const registerSpy = jest
-      .spyOn(NativeModules.Passkey, 'register')
+      .spyOn(NativeModules.Passkey, 'create')
       .mockResolvedValue(RegiOSResult);
 
-    await Passkey.register(RegRequest);
+    await Passkey.create(RegRequest);
     expect(registerSpy).toHaveBeenCalled();
   });
 
   test('should call native auth method', async () => {
     const authSpy = jest
-      .spyOn(NativeModules.Passkey, 'authenticate')
+      .spyOn(NativeModules.Passkey, 'get')
       .mockResolvedValue(AuthiOSResult);
 
-    await Passkey.authenticate(AuthRequest);
-    expect(authSpy).toHaveBeenCalled();
-  });
-
-  test('should call native register method with security key disabled', async () => {
-    const registerSpy = jest
-      .spyOn(NativeModules.Passkey, 'register')
-      .mockResolvedValue(RegiOSResult);
-
-    await Passkey.register(RegRequest, {
-      enableSecurityKey: false,
-    });
-    expect(registerSpy).toHaveBeenCalled();
-  });
-
-  test('should call native register method with platform key disabled', async () => {
-    const registerSpy = jest
-      .spyOn(NativeModules.Passkey, 'register')
-      .mockResolvedValue(RegiOSResult);
-
-    await Passkey.register(RegRequest, {
-      enablePlatformKey: false,
-    });
-    expect(registerSpy).toHaveBeenCalled();
-  });
-
-  test('should call native register method with both key types disabled', async () => {
-    const registerSpy = jest
-      .spyOn(NativeModules.Passkey, 'register')
-      .mockResolvedValue(RegiOSResult);
-
-    await Passkey.register(RegRequest, {
-      enablePlatformKey: false,
-      enableSecurityKey: false,
-    });
-    expect(registerSpy).toHaveBeenCalled();
-  });
-
-  test('should call native auth method with key types enabled', async () => {
-    const authSpy = jest
-      .spyOn(NativeModules.Passkey, 'authenticate')
-      .mockResolvedValue(AuthiOSResult);
-
-    await Passkey.authenticate(AuthRequest);
+    await Passkey.get(AuthRequest);
     expect(authSpy).toHaveBeenCalled();
   });
 });
