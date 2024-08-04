@@ -1,22 +1,8 @@
 /**
- * The available options for Passkey operations
- */
-export interface PasskeyOptions {
-  withSecurityKey: boolean; // iOS only
-}
-
-// https://www.w3.org/TR/webauthn-2/#dictionary-credential-descriptor
-export interface PublicKeyCredentialDescriptor {
-  type: string;
-  id: string;
-  transports?: Array<string>;
-}
-
-/**
  * The FIDO2 Attestation Request
- * https://www.w3.org/TR/webauthn-2/#dictionary-makecredentialoptions
+ * https://www.w3.org/TR/webauthn-3/#dictionary-makecredentialoptions
  */
-export interface PasskeyRegistrationRequest {
+export interface PasskeyCreateRequest {
   challenge: string;
   rp: {
     id: string;
@@ -37,13 +23,24 @@ export interface PasskeyRegistrationRequest {
     userVerification?: string;
   };
   attestation?: string;
-  extensions?: Record<string, unknown>;
+  extensions?: {
+    largeBlob?: {
+      supported?: boolean;
+      read?: boolean;
+      write?: Uint8Array;
+    };
+    prf?: {
+      eval?: AuthenticationExtensionsPRFValues;
+      evalByCredential?: [string: AuthenticationExtensionsPRFValues];
+    };
+  };
 }
 
 /**
  * The FIDO2 Attestation Result
+ * https://www.w3.org/TR/webauthn-3/#iface-pkcredential
  */
-export interface PasskeyRegistrationResult {
+export interface PasskeyCreateResult {
   id: string;
   rawId: string;
   type?: string;
@@ -51,25 +48,44 @@ export interface PasskeyRegistrationResult {
     clientDataJSON: string;
     attestationObject: string;
   };
+  extensions?: {
+    clientExtensionResults?: {
+      largeBlob?: {
+        supported?: boolean;
+        blob?: Uint8Array;
+        written?: boolean;
+      };
+      prf: {
+        enabled?: boolean;
+        results?: AuthenticationExtensionsPRFValues;
+      };
+    };
+  };
 }
 
 /**
  * The FIDO2 Assertion Request
- * https://www.w3.org/TR/webauthn-2/#dictionary-assertion-options
+ * https://www.w3.org/TR/webauthn-3/#dictionary-assertion-options
  */
-export interface PasskeyAuthenticationRequest {
+export interface PasskeyGetRequest {
   challenge: string;
   rpId: string;
   timeout?: number;
   allowCredentials?: Array<PublicKeyCredentialDescriptor>;
   userVerification?: string;
-  extensions?: Record<string, unknown>;
+  extensions?: {
+    prf?: {
+      eval?: AuthenticationExtensionsPRFValues;
+      evalByCredential?: [string: AuthenticationExtensionsPRFValues];
+    };
+  };
 }
 
 /**
  * The FIDO2 Assertion Result
+ * https://www.w3.org/TR/webauthn-3/#iface-pkcredential
  */
-export interface PasskeyAuthenticationResult {
+export interface PasskeyGetResult {
   id: string;
   rawId: string;
   type?: string;
@@ -79,32 +95,39 @@ export interface PasskeyAuthenticationResult {
     signature: string;
     userHandle: string;
   };
+  clientExtensionResults?: {
+    largeBlob?: {
+      supported?: boolean;
+      blob?: Uint8Array;
+      written?: boolean;
+    };
+    prf: {
+      enabled?: boolean;
+      results?: AuthenticationExtensionsPRFValues;
+    };
+  };
+}
+
+// https://www.w3.org/TR/webauthn-3/#dictionary-credential-descriptor
+export interface PublicKeyCredentialDescriptor {
+  type: string;
+  id: string;
+  transports?: Array<AuthenticatorTransport>;
+}
+
+enum AuthenticatorTransport {
+  usb = 'usb',
+  nfc = 'nfc',
+  ble = 'ble',
+  smartCard = 'smart-card',
+  hybrid = 'hybrid',
+  internal = 'internal',
 }
 
 /**
- * IOS
+ * https://www.w3.org/TR/webauthn-3/#prf-extension
  */
-export interface PasskeyiOSRegistrationData {
-  rpId: string;
-  challenge: string;
-  name: string;
-  userID: string;
-}
-
-export interface PasskeyiOSRegistrationResult {
-  credentialID: string;
-  response: {
-    rawAttestationObject: string;
-    rawClientDataJSON: string;
-  };
-}
-
-export interface PasskeyiOSAuthenticationResult {
-  credentialID: string;
-  userID: string;
-  response: {
-    rawAuthenticatorData: string;
-    rawClientDataJSON: string;
-    signature: string;
-  };
+interface AuthenticationExtensionsPRFValues {
+  first: Uint8Array;
+  second?: Uint8Array;
 }
