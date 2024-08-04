@@ -25,6 +25,11 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libPasskey.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPasskey.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		1F30C54C2C601D8A00BC3886 /* PasskeyErrors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasskeyErrors.swift; sourceTree = "<group>"; };
+		1F30C54D2C601DA900BC3886 /* PasskeyHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasskeyHelper.swift; sourceTree = "<group>"; };
+		1F30C54E2C601DB300BC3886 /* PasskeyOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasskeyOptions.swift; sourceTree = "<group>"; };
+		1F30C54F2C601DB700BC3886 /* PasskeyResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasskeyResponses.swift; sourceTree = "<group>"; };
+		1F30C5502C601DBA00BC3886 /* PasskeyShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasskeyShared.swift; sourceTree = "<group>"; };
 		1F535584290D437E00374331 /* PasskeyDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasskeyDelegate.swift; sourceTree = "<group>"; };
 		B3E7B5891CC2AC0600A0062D /* Passkey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Passkey.m; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* Passkey-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Passkey-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -53,7 +58,12 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
+				1F30C54C2C601D8A00BC3886 /* PasskeyErrors.swift */,
+				1F30C54F2C601DB700BC3886 /* PasskeyResponses.swift */,
+				1F30C5502C601DBA00BC3886 /* PasskeyShared.swift */,
+				1F30C54E2C601DB300BC3886 /* PasskeyOptions.swift */,
 				1F535584290D437E00374331 /* PasskeyDelegate.swift */,
+				1F30C54D2C601DA900BC3886 /* PasskeyHelper.swift */,
 				F4FF95D6245B92E800C19C63 /* Passkey.swift */,
 				B3E7B5891CC2AC0600A0062D /* Passkey.m */,
 				F4FF95D5245B92E700C19C63 /* Passkey-Bridging-Header.h */,
@@ -154,7 +164,6 @@
 				COPY_PHASE_STRIP = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				"EXCLUDED_ARCHS[sdk=*]" = arm64;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -205,7 +214,6 @@
 				COPY_PHASE_STRIP = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				"EXCLUDED_ARCHS[sdk=*]" = arm64;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
