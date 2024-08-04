@@ -158,7 +158,7 @@ For this just set the `authenticatorAttachment` field in your Passkey request to
 
 #### largeBlob
 
-As of version 3.0 the newly added largeBlob extension should work out of the box for both iOS and Android.
+As of version 3.0 the newly added largeBlob extension should work out of the box for iOS only.
 
 #### PRF
 
