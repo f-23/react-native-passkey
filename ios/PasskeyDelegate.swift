@@ -140,7 +140,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
         authenticatorData: credential.rawAuthenticatorData.toBase64URLEncodedString(),
         clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
         signature: credential.signature!.toBase64URLEncodedString(),
-        userHandle: credential.userID!.toBase64URLEncodedString()
+        userHandle: String(data: credential.userID, encoding: .utf8)
     );
     
     let getResponse = RNPasskeyGetResponseJSON(
@@ -158,7 +158,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
       authenticatorData: credential.rawAuthenticatorData.toBase64URLEncodedString(),
       clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
       signature: credential.signature!.toBase64URLEncodedString(),
-      userHandle: credential.userID!.toBase64URLEncodedString()
+      userHandle: String(data: credential.userID, encoding: .utf8)
     );
     
     let getResponse = RNPasskeyGetResponseJSON(

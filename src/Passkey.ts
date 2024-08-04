@@ -1,13 +1,12 @@
-import { NotSupportedError } from './PasskeyError';
+import { handleNativeError, NotSupportedError } from './PasskeyError';
 import { Platform } from 'react-native';
-import { PasskeyAndroid } from './PasskeyAndroid';
-import { PasskeyiOS } from './PasskeyiOS';
 import type {
-  PasskeyRegistrationRequest,
-  PasskeyRegistrationResult,
-  PasskeyAuthenticationRequest,
-  PasskeyAuthenticationResult,
+  PasskeyCreateRequest,
+  PasskeyCreateResult,
+  PasskeyGetRequest,
+  PasskeyGetResult,
 } from './PasskeyTypes';
+import { NativePasskey } from './NativePasskey';
 
 export class Passkey {
   /**
@@ -19,17 +18,21 @@ export class Passkey {
    * @throws
    */
   public static async create(
-    request: PasskeyRegistrationRequest
-  ): Promise<PasskeyRegistrationResult> {
+    request: PasskeyCreateRequest
+  ): Promise<PasskeyCreateResult> {
     if (!Passkey.isSupported()) {
       throw NotSupportedError;
     }
 
-    if (Platform.OS === 'android') {
-      return PasskeyAndroid.create(request);
-    }
+    try {
+      const response: PasskeyCreateResult = (await NativePasskey.create(
+        JSON.stringify(request)
+      )) as PasskeyCreateResult;
 
-    return PasskeyiOS.create(request);
+      return response;
+    } catch (error) {
+      throw handleNativeError(error);
+    }
   }
 
   /**
@@ -41,16 +44,21 @@ export class Passkey {
    * @throws
    */
   public static async get(
-    request: PasskeyAuthenticationRequest
-  ): Promise<PasskeyAuthenticationResult> {
+    request: PasskeyGetRequest
+  ): Promise<PasskeyGetResult> {
     if (!Passkey.isSupported()) {
       throw NotSupportedError;
     }
 
-    if (Platform.OS === 'android') {
-      return PasskeyAndroid.get(request);
+    try {
+      const response: PasskeyGetResult = (await NativePasskey.get(
+        JSON.stringify(request)
+      )) as PasskeyGetResult;
+
+      return response;
+    } catch (error) {
+      throw handleNativeError(error);
     }
-    return PasskeyiOS.get(request);
   }
 
   /**

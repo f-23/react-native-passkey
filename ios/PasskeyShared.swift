@@ -259,7 +259,7 @@ internal struct PublicKeyCredentialUserEntity: Decodable {
 
   var displayName: String
 
-  var id: Base64URLString
+  var id: String
 }
 
 
