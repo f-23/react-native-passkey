@@ -100,9 +100,11 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     // Credential transports is only available on iOS 17.5+, so we need to check it here
     // If device is running <17.5, return an empty array
     if #available(iOS 17.5, *) {
-      transports = credential.transports.compactMap({ transport in
-        AuthenticatorTransport(rawValue: transport.rawValue);
-      });
+      if let securityKeyCredential = credential as? ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor {
+        transports = securityKeyCredential.transports.compactMap { transport in
+          AuthenticatorTransport(rawValue: transport.rawValue)
+        }
+      }
     }
      
     let response =  AuthenticatorAttestationResponseJSON(
@@ -135,12 +137,13 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     }
     
     let clientExtensionResults = AuthenticationExtensionsClientOutputsJSON(largeBlob: largeBlob);
+    let userHandle: String? = credential.userID.flatMap { String(data: $0, encoding: .utf8) };
 
     let response = AuthenticatorAssertionResponseJSON(
         authenticatorData: credential.rawAuthenticatorData.toBase64URLEncodedString(),
         clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
         signature: credential.signature!.toBase64URLEncodedString(),
-        userHandle: String(data: credential.userID, encoding: .utf8)
+        userHandle: userHandle
     );
     
     let getResponse = RNPasskeyGetResponseJSON(
@@ -154,11 +157,13 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
   }
   
   func handleSecurityKeyPublicKeyAssertionResponse(credential: ASAuthorizationSecurityKeyPublicKeyCredentialAssertion) -> Void {
+    let userHandle: String? = credential.userID.flatMap { String(data: $0, encoding: .utf8) };
+    
     let response =  AuthenticatorAssertionResponseJSON(
       authenticatorData: credential.rawAuthenticatorData.toBase64URLEncodedString(),
       clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
       signature: credential.signature!.toBase64URLEncodedString(),
-      userHandle: String(data: credential.userID, encoding: .utf8)
+      userHandle: userHandle
     );
     
     let getResponse = RNPasskeyGetResponseJSON(
