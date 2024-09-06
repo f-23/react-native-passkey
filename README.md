@@ -148,11 +148,21 @@ try {
 }
 ```
 
-### Security Keys (iOS-specific)
+### Force Platform or Security Key (iOS-specific)
 
-You can allow or disallow users to register using a Security Key (like [Yubikey](https://www.yubico.com/)).
+You can force users to register and authenticate using either a platform key, a security key (like [Yubikey](https://www.yubico.com/)) or allow both using the following methods. This only works on iOS, Android will ignore these instructions.
 
-For this just set the `authenticatorAttachment` field in your Passkey request to `platform` or `cross-platform`, depending on your preference.
+#### Create Passkey
+
+- `Passkey.create()` - Allow the user to choose between platform and security passkey
+- `Passkey.createPlatformKey()` - Force the user to create a platform passkey
+- `Passkey.createSecurityKey()` - Force the user to create a security passkey
+
+#### Get Passkey
+
+- `Passkey.get()` - Allow the user to choose between platform and security passkey
+- `Passkey.getPlatformKey()` - Force the user to authenticate using a platform passkey
+- `Passkey.getSecurityKey()` - Force the user to authenticate using a security passkey
 
 ### Extensions
 

@@ -329,7 +329,7 @@ PODS:
   - React-jsinspector (0.71.18)
   - React-logger (0.71.18):
     - glog
-  - react-native-passkey (2.1.1):
+  - react-native-passkey (3.0.0-beta2):
     - React-Core
   - React-perflogger (0.71.18)
   - React-RCTActionSheet (0.71.18):
@@ -573,7 +573,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  boost: a7c83b31436843459a1961bfd74b96033dc77234
+  boost: 7dcd2de282d72e344012f7d6564d024930a6a440
   CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
   DoubleConversion: 5189b271737e1565bdce30deb4a08d647e3f5f54
   FBLazyVector: 5f81939bc6d6bcd3e71bba3744753c2a88991395
@@ -592,7 +592,7 @@ SPEC CHECKSUMS:
   hermes-engine: 251dcc3511fc68678e2ee96dd7d175d9489b781e
   libevent: 4049cae6c81cdb3654a443be001fb9bdceff7913
   OpenSSL-Universal: ebc357f1e6bc71fa463ccb2fe676756aff50e88c
-  RCT-Folly: 0080d0a6ebf2577475bda044aa59e2ca1f909cda
+  RCT-Folly: 424b8c9a7a0b9ab2886ffe9c3b041ef628fd4fb1
   RCTRequired: 467cd79889cbcfd008d0ff7c697f73765d4578c3
   RCTTypeSafety: 71c8b219dc633684896452fee38a1e442d167dd6
   React: b807b09e4402c12dcbc44176e50533dca10d01f0
@@ -606,7 +606,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: a60e1117c011cbb6a95418f4bf67d6dfbbf81772
   React-jsinspector: 7218c92923292e20326a1eed3104fe90393ca449
   React-logger: 166cf6649b5ea9e26ab816073dd0e68020561d65
-  react-native-passkey: b2125378c7fe3638349acc7dc37e90721d22fb8a
+  react-native-passkey: 88d3bb48dc38bdc69f0baf019b0faf355c27e6ec
   React-perflogger: c8849042b03392681ebd5d99a0775dbadfad2c74
   React-RCTActionSheet: 6bd3b502da266d69942e9ce4bc13666f90544620
   React-RCTAnimation: 63fbec04ae279b387ac786898bd5a918b8875f48

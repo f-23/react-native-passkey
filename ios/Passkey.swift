@@ -20,8 +20,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
   /**
    Main create entrypoint
    */
-  @objc(create:withResolver:withRejecter:)
-  func create(_ request: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+  @objc(create:withForcePlatformKey:withForceSecurityKey:withResolver:withRejecter:)
+  func create(_ request: String, forcePlatformKey: Bool, forceSecurityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
     do {
       passkeyHandler = RNPasskeyHandler(resolve, reject);
       
@@ -46,7 +46,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       let securityKeyRequest: ASAuthorizationRequest = self.configureCreateSecurityKeyRequest(challenge: challenge, userId: userId, request: requestJSON);
         
       // Get authorization controller
-      let authController: ASAuthorizationController = self.configureAuthController(authenticatorAttachement: requestJSON.authenticatorSelection?.authenticatorAttachment, platformKeyRequest: platformKeyRequest, securityKeyRequest: securityKeyRequest);
+      let authController: ASAuthorizationController = self.configureAuthController(forcePlatformKey: forcePlatformKey, forceSecurityKey: forceSecurityKey, platformKeyRequest: platformKeyRequest, securityKeyRequest: securityKeyRequest);
 
       let passkeyDelegate = PasskeyDelegate(completionHandler: self);
       
@@ -65,8 +65,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
   /**
    Main get entrypoint
    */
-  @objc(get:withResolver:withRejecter:)
-  func get(_ request: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+  @objc(get:withForcePlatformKey:withForceSecurityKey:withResolver:withRejecter:)
+  func get(_ request: String, forcePlatformKey: Bool, forceSecurityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
     do {
       passkeyHandler = RNPasskeyHandler(resolve, reject);
       
@@ -84,7 +84,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       let securityKeyRequest: ASAuthorizationRequest = self.configureGetSecurityKeyRequest(challenge: challenge, request: requestJSON);
       
       // Get authorization controller
-      let authController: ASAuthorizationController = self.configureAuthController(platformKeyRequest: platformKeyRequest, securityKeyRequest: securityKeyRequest);
+      let authController: ASAuthorizationController = self.configureAuthController(forcePlatformKey: forcePlatformKey, forceSecurityKey: forceSecurityKey, platformKeyRequest: platformKeyRequest, securityKeyRequest: securityKeyRequest);
       
       let passkeyDelegate = PasskeyDelegate(completionHandler: self);
       
@@ -240,16 +240,16 @@ class Passkey: NSObject, RNPasskeyResultHandler {
   /**
    Creates and returns authorization controller depending on selected request types
    */
-  private func configureAuthController(authenticatorAttachement: AuthenticatorAttachment? = .crossPlatform, platformKeyRequest: ASAuthorizationRequest, securityKeyRequest: ASAuthorizationRequest) -> ASAuthorizationController {
-    // Determine if we show platformKeyRequest, securityKeyRequest, or both
-    var authorizationRequests: [ASAuthorizationRequest] = [platformKeyRequest]
-
-    if (authenticatorAttachement == .crossPlatform) {
-      authorizationRequests.append(securityKeyRequest);
+  private func configureAuthController(forcePlatformKey: Bool, forceSecurityKey: Bool, platformKeyRequest: ASAuthorizationRequest, securityKeyRequest: ASAuthorizationRequest) -> ASAuthorizationController {
+    if (forcePlatformKey) {
+      return ASAuthorizationController(authorizationRequests: [platformKeyRequest]);
     }
     
-    // Create auth controller
-    return ASAuthorizationController(authorizationRequests: authorizationRequests);
+    if (forceSecurityKey) {
+      return ASAuthorizationController(authorizationRequests: [securityKeyRequest]);
+    }
+
+    return ASAuthorizationController(authorizationRequests: [platformKeyRequest, securityKeyRequest]);
   }
   
   /**

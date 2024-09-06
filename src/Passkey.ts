@@ -26,7 +26,67 @@ export class Passkey {
 
     try {
       const response: PasskeyCreateResult = (await NativePasskey.create(
-        JSON.stringify(request)
+        JSON.stringify(request),
+        false, // forcePlatformKey
+        false // forceSecurityKey
+      )) as PasskeyCreateResult;
+
+      return response;
+    } catch (error) {
+      throw handleNativeError(error);
+    }
+  }
+
+  /**
+   * Creates a new Passkey
+   * Forces the usage of a platform authenticator on iOS
+   *
+   * @param request The FIDO2 Attestation Request in JSON format
+   * @param options An object containing options for the registration process
+   * @returns The FIDO2 Attestation Result in JSON format
+   * @throws
+   */
+  public static async createPlatformKey(
+    request: PasskeyCreateRequest
+  ): Promise<PasskeyCreateResult> {
+    if (!Passkey.isSupported()) {
+      throw NotSupportedError;
+    }
+
+    try {
+      const response: PasskeyCreateResult = (await NativePasskey.create(
+        JSON.stringify(request),
+        true, // forcePlatformKey
+        false // forceSecurityKey
+      )) as PasskeyCreateResult;
+
+      return response;
+    } catch (error) {
+      throw handleNativeError(error);
+    }
+  }
+
+  /**
+   * Creates a new Passkey
+   * Forces the usage of a security authenticator on iOS
+   *
+   * @param request The FIDO2 Attestation Request in JSON format
+   * @param options An object containing options for the registration process
+   * @returns The FIDO2 Attestation Result in JSON format
+   * @throws
+   */
+  public static async createSecurityKey(
+    request: PasskeyCreateRequest
+  ): Promise<PasskeyCreateResult> {
+    if (!Passkey.isSupported()) {
+      throw NotSupportedError;
+    }
+
+    try {
+      const response: PasskeyCreateResult = (await NativePasskey.create(
+        JSON.stringify(request),
+        false, // forcePlatformKey
+        true // forceSecurityKey
       )) as PasskeyCreateResult;
 
       return response;
@@ -52,7 +112,67 @@ export class Passkey {
 
     try {
       const response: PasskeyGetResult = (await NativePasskey.get(
-        JSON.stringify(request)
+        JSON.stringify(request),
+        false, // forcePlatformKey
+        false // forceSecurityKey
+      )) as PasskeyGetResult;
+
+      return response;
+    } catch (error) {
+      throw handleNativeError(error);
+    }
+  }
+
+  /**
+   * Authenticates using an existing Passkey
+   * Forces the usage of a platform authenticator on iOS
+   *
+   * @param request The FIDO2 Assertion Request in JSON format
+   * @param options An object containing options for the authentication process
+   * @returns The FIDO2 Assertion Result in JSON format
+   * @throws
+   */
+  public static async getPlatformKey(
+    request: PasskeyGetRequest
+  ): Promise<PasskeyGetResult> {
+    if (!Passkey.isSupported()) {
+      throw NotSupportedError;
+    }
+
+    try {
+      const response: PasskeyGetResult = (await NativePasskey.get(
+        JSON.stringify(request),
+        true, // forcePlatformKey
+        false // forceSecurityKey
+      )) as PasskeyGetResult;
+
+      return response;
+    } catch (error) {
+      throw handleNativeError(error);
+    }
+  }
+
+  /**
+   * Authenticates using an existing Passkey
+   * Forces the usage of a security authenticator on iOS
+   *
+   * @param request The FIDO2 Assertion Request in JSON format
+   * @param options An object containing options for the authentication process
+   * @returns The FIDO2 Assertion Result in JSON format
+   * @throws
+   */
+  public static async getSecurityKey(
+    request: PasskeyGetRequest
+  ): Promise<PasskeyGetResult> {
+    if (!Passkey.isSupported()) {
+      throw NotSupportedError;
+    }
+
+    try {
+      const response: PasskeyGetResult = (await NativePasskey.get(
+        JSON.stringify(request),
+        false, // forcePlatformKey
+        true // forceSecurityKey
       )) as PasskeyGetResult;
 
       return response;
