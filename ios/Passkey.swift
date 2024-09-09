@@ -36,7 +36,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       }
 
       // Convert userId to Data
-      guard let userId: Data = Data(base64URLEncoded: requestJSON.user.id) else {
+      guard let userId: Data = requestJSON.user.id.data(using: .utf8) else {
         handleError(RNPasskeyError(type: .invalidUser));
         return;
       }
@@ -109,11 +109,11 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       switch data {
       case .create(let createResponse):
         let data = try JSONEncoder().encode(createResponse);
-        handler.resolve(String(data: data, encoding: .utf8));
+        handler.resolve(try JSONSerialization.jsonObject(with: data));
         return
       case .get(let getResponse):
         let data = try JSONEncoder().encode(getResponse);
-        handler.resolve(String(data: data, encoding: .utf8));
+        handler.resolve(try JSONSerialization.jsonObject(with: data));
       }
     } catch let error as NSError {
       handler.reject(error.debugDescription, error.debugDescription, nil);

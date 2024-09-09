@@ -1,13 +1,17 @@
 import { Passkey } from './Passkey';
 import type { PasskeyError } from './PasskeyError';
 import type {
-  PasskeyAuthenticationRequest,
-  PasskeyRegistrationRequest,
+  PasskeyCreateRequest,
+  PasskeyCreateResult,
+  PasskeyGetRequest,
+  PasskeyGetResult,
 } from './PasskeyTypes';
 
 export {
   Passkey,
   PasskeyError,
-  PasskeyRegistrationRequest,
-  PasskeyAuthenticationRequest,
+  PasskeyCreateRequest,
+  PasskeyCreateResult,
+  PasskeyGetRequest,
+  PasskeyGetResult,
 };
