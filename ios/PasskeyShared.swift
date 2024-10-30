@@ -302,7 +302,7 @@ internal struct PublicKeyCredentialDescriptor: Decodable {
     
     id = try values.decodeIfPresent(String.self, forKey: .id)!;
     
-    transports = try values.decode([AuthenticatorTransport]?.self, forKey: .transports);
+    transports = try values.decodeIfPresent([AuthenticatorTransport].self, forKey: .transports);
 
     let typeValue = try values.decodeIfPresent(String.self, forKey: .type);
     if let typeString = typeValue {
