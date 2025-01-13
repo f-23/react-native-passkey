@@ -1,4 +1,5 @@
 apply plugin: "com.android.application"
+apply plugin: "com.facebook.react"
 
 import com.android.build.OutputFile
 import org.apache.tools.ant.taskdefs.condition.Os
@@ -81,8 +82,6 @@ import org.apache.tools.ant.taskdefs.condition.Os
 project.ext.react = [
     enableHermes: true,  // clean and rebuild if changing
 ]
-
-apply from: "../../node_modules/react-native/react.gradle"
 
 /**
  * Set this to true to create two separate APKs instead of one:
@@ -251,8 +250,7 @@ android {
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
 
-    //noinspection GradleDynamicVersion
-    implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation("com.facebook.react:react-android")
 
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.0.0"
 
@@ -271,9 +269,7 @@ dependencies {
 
     if (enableHermes) {
         //noinspection GradleDynamicVersion
-        implementation("com.facebook.react:hermes-engine:+") { // From node_modules
-            exclude group:'com.facebook.fbjni'
-        }
+        implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
     }
