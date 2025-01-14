@@ -57,7 +57,6 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       passkeyDelegate.performAuthForController(controller: authController);
 
     } catch let error as NSError {
-      print(error.localizedDescription);
       handleError(handleErrorCode(error: error));
     }
   }

@@ -25,13 +25,16 @@ export class Passkey {
     }
 
     try {
-      const response: PasskeyCreateResult = (await NativePasskey.create(
+      const response = await NativePasskey.create(
         JSON.stringify(request),
         false, // forcePlatformKey
         false // forceSecurityKey
-      )) as PasskeyCreateResult;
+      )
 
-      return response;
+      if (typeof response === 'string') {
+        return JSON.parse(response) as PasskeyCreateResult;
+      }
+      return response as PasskeyCreateResult;
     } catch (error) {
       throw handleNativeError(error);
     }
@@ -54,13 +57,16 @@ export class Passkey {
     }
 
     try {
-      const response: PasskeyCreateResult = (await NativePasskey.create(
+      const response = await NativePasskey.create(
         JSON.stringify(request),
         true, // forcePlatformKey
         false // forceSecurityKey
-      )) as PasskeyCreateResult;
+      )
 
-      return response;
+      if (typeof response === 'string') {
+        return JSON.parse(response) as PasskeyCreateResult;
+      }
+      return response as PasskeyCreateResult;
     } catch (error) {
       throw handleNativeError(error);
     }
@@ -83,13 +89,16 @@ export class Passkey {
     }
 
     try {
-      const response: PasskeyCreateResult = (await NativePasskey.create(
+      const response = await NativePasskey.create(
         JSON.stringify(request),
         false, // forcePlatformKey
         true // forceSecurityKey
-      )) as PasskeyCreateResult;
+      )
 
-      return response;
+      if (typeof response === 'string') {
+        return JSON.parse(response) as PasskeyCreateResult;
+      }
+      return response as PasskeyCreateResult;
     } catch (error) {
       throw handleNativeError(error);
     }
@@ -111,13 +120,16 @@ export class Passkey {
     }
 
     try {
-      const response: PasskeyGetResult = (await NativePasskey.get(
+      const response  = await NativePasskey.get(
         JSON.stringify(request),
         false, // forcePlatformKey
         false // forceSecurityKey
-      )) as PasskeyGetResult;
+      )
 
-      return response;
+      if (typeof response === 'string') {
+        return JSON.parse(response) as PasskeyGetResult;
+      }
+      return response as PasskeyGetResult;
     } catch (error) {
       throw handleNativeError(error);
     }
@@ -140,13 +152,16 @@ export class Passkey {
     }
 
     try {
-      const response: PasskeyGetResult = (await NativePasskey.get(
+      const response = await NativePasskey.get(
         JSON.stringify(request),
         true, // forcePlatformKey
         false // forceSecurityKey
-      )) as PasskeyGetResult;
+      )
 
-      return response;
+      if (typeof response === 'string') {
+        return JSON.parse(response) as PasskeyGetResult;
+      }
+      return response as PasskeyGetResult;
     } catch (error) {
       throw handleNativeError(error);
     }
@@ -169,13 +184,16 @@ export class Passkey {
     }
 
     try {
-      const response: PasskeyGetResult = (await NativePasskey.get(
+      const response = await NativePasskey.get(
         JSON.stringify(request),
         false, // forcePlatformKey
         true // forceSecurityKey
-      )) as PasskeyGetResult;
+      )
 
-      return response;
+      if (typeof response === 'string') {
+        return JSON.parse(response) as PasskeyGetResult;
+      }
+      return response as PasskeyGetResult;
     } catch (error) {
       throw handleNativeError(error);
     }
