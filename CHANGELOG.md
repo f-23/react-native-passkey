@@ -1,5 +1,7 @@
 
 
+# [3.1.0](https://github.com/f-23/react-native-passkey/compare/v3.0.0...v3.1.0) (2025-01-14)
+
 # [3.0.0](https://github.com/f-23/react-native-passkey/compare/v3.0.0-rc2...v3.0.0) (2024-10-30)
 
 # [3.0.0-rc2](https://github.com/f-23/react-native-passkey/compare/v3.0.0-rc...v3.0.0-rc2) (2024-09-11)
