@@ -29,7 +29,7 @@ export class Passkey {
         JSON.stringify(request),
         false, // forcePlatformKey
         false // forceSecurityKey
-      )
+      );
 
       if (typeof response === 'string') {
         return JSON.parse(response) as PasskeyCreateResult;
@@ -61,7 +61,7 @@ export class Passkey {
         JSON.stringify(request),
         true, // forcePlatformKey
         false // forceSecurityKey
-      )
+      );
 
       if (typeof response === 'string') {
         return JSON.parse(response) as PasskeyCreateResult;
@@ -93,7 +93,7 @@ export class Passkey {
         JSON.stringify(request),
         false, // forcePlatformKey
         true // forceSecurityKey
-      )
+      );
 
       if (typeof response === 'string') {
         return JSON.parse(response) as PasskeyCreateResult;
@@ -120,11 +120,11 @@ export class Passkey {
     }
 
     try {
-      const response  = await NativePasskey.get(
+      const response = await NativePasskey.get(
         JSON.stringify(request),
         false, // forcePlatformKey
         false // forceSecurityKey
-      )
+      );
 
       if (typeof response === 'string') {
         return JSON.parse(response) as PasskeyGetResult;
@@ -156,7 +156,7 @@ export class Passkey {
         JSON.stringify(request),
         true, // forcePlatformKey
         false // forceSecurityKey
-      )
+      );
 
       if (typeof response === 'string') {
         return JSON.parse(response) as PasskeyGetResult;
@@ -188,7 +188,7 @@ export class Passkey {
         JSON.stringify(request),
         false, // forcePlatformKey
         true // forceSecurityKey
-      )
+      );
 
       if (typeof response === 'string') {
         return JSON.parse(response) as PasskeyGetResult;
