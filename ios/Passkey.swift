@@ -276,7 +276,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       return
     }
     
-    handler.reject(error.type.rawValue, error.message, nil);
+    handler.reject(error.type.rawValue, error.type.rawValue, nil);
   }
 }
 
