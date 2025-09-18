@@ -1,35 +1,31 @@
-require "json"
+require 'json'
 
-package = JSON.parse(File.read(File.join(__dir__, "package.json")))
-folly_compiler_flags = '-DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -Wno-comma -Wno-shorten-64-to-32'
+package = JSON.parse(File.read(File.join(__dir__, 'package.json')))
 
 Pod::Spec.new do |s|
-  s.name         = "react-native-passkey"
-  s.version      = package["version"]
-  s.summary      = package["description"]
-  s.homepage     = package["homepage"]
-  s.license      = package["license"]
-  s.authors      = package["author"]
+  s.name         = 'react-native-passkey'
+  s.version      = package['version']
+  s.summary      = package['description']
+  s.homepage     = package['homepage']
+  s.license      = package['license']
+  s.authors      = package['author']
 
-  s.platforms    = { :ios => "11.0" }
-  s.source       = { :git => "https://github.com/mTRx0/react-native-passkey.git", :tag => "#{s.version}" }
+  # Passkeys need iOS 15+
+  s.platform     = :ios, '15.0'
 
-  s.source_files = "ios/**/*.{h,m,mm,swift}"
+  # When autolinked, CocoaPods will use the local path; the :source is not used.
+  s.source       = { :git => 'https://github.com/f-23/react-native-passkey.git', :tag => "v#{s.version}" }
 
-  s.dependency "React-Core"
+  s.source_files = 'ios/**/*.{h,m,mm,swift}'
+  s.swift_version = '5.7'
+  s.frameworks    = 'AuthenticationServices'
 
-  # Don't install the dependencies when we run `pod install` in the old architecture.
-  if ENV['RCT_NEW_ARCH_ENABLED'] == '1' then
-    s.compiler_flags = folly_compiler_flags + " -DRCT_NEW_ARCH_ENABLED=1"
-    s.pod_target_xcconfig    = {
-        "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\"",
-        "CLANG_CXX_LANGUAGE_STANDARD" => "c++17"
-    }
-
-    s.dependency "React-Codegen"
-    s.dependency "RCT-Folly"
-    s.dependency "RCTRequired"
-    s.dependency "RCTTypeSafety"
-    s.dependency "ReactCommon/turbomodule/core"
+  # Let React Native decide/transitively provide React, Folly, glog, etc.
+  if defined?(install_modules_dependencies)
+    install_modules_dependencies(s)
+  else
+    # Fallback for RN < 0.71
+    s.dependency 'React-Core'
+    # Do NOT add RCT-Folly / React-Codegen here — older RN brings what it needs transitively.
   end
 end
