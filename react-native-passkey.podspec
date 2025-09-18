@@ -26,6 +26,5 @@ Pod::Spec.new do |s|
   else
     # Fallback for RN < 0.71
     s.dependency "React-Core"
-    # Do NOT add RCT-Folly / React-Codegen here — older RN brings what it needs transitively.
   end
 end
