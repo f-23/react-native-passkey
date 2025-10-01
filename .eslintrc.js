@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['@react-native-community'],
+  extends: ['@react-native'],
   rules: {
     'no-bitwise': 0,
   },
