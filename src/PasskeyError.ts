@@ -11,7 +11,7 @@ export const UnknownError: PasskeyError = {
 export const NotSupportedError: PasskeyError = {
   error: 'NotSupported',
   message:
-    'Passkeys are not supported on this device. iOS 15 and above is required to use Passkeys',
+    'Passkeys are not supported on this device. iOS 15 or Android SDK 28 and above is required to use Passkeys',
 };
 
 export const RequestFailedError: PasskeyError = {

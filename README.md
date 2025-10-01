@@ -172,7 +172,7 @@ As of version 3.0 the newly added largeBlob extension should work out of the box
 
 #### PRF
 
-As of version 3.0 the newly added largeBlob extension should work out of the box for Android only.
+As of version 3.0 the newly added PRF extension should work out of the box for Android only.
 
 ---
 
