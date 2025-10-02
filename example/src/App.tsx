@@ -3,7 +3,7 @@ import * as React from 'react';
 import { StyleSheet, View, Button, TextInput, Alert } from 'react-native';
 import { Passkey } from 'react-native-passkey';
 
-const url = 'https://XYZ.ngrok-free.app'; // REPLACE with your domain (e.g. ngrok)
+const url = 'https://83e83f16654d.ngrok-free.app'; // REPLACE with your domain (e.g. ngrok)
 
 export default function App() {
   const [email, setEmail] = React.useState('');
@@ -19,10 +19,14 @@ export default function App() {
         },
         body: JSON.stringify({ email }),
       });
+
       const requestJson = await response.json();
+      console.log(requestJson)
 
       // Perform passkey creation
       const result = await Passkey.create(requestJson);
+
+      console.log(result)
 
       // Verify the response from the authenticator
       const verifyResponse = await fetch(`${url}/auth/new/verify`, {
@@ -54,8 +58,12 @@ export default function App() {
       });
       const requestJson = await response.json();
 
+      console.log(requestJson)
+
       // Perform passkey assertion
       const result = await Passkey.get(requestJson);
+
+      console.log(result)
 
       // Verify the response from the authenticator
       const verifyResponse = await fetch(`${url}/auth/verify`, {
@@ -81,7 +89,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <TextInput placeholder="email" value={email} onChangeText={setEmail} />
+      <TextInput style={styles.input} placeholder="email" value={email} onChangeText={setEmail} />
       <Button title="Create Account" onPress={createAccount} />
       <Button title="Authenticate" onPress={authenticateAccount} />
       <Button title="isSupported?" onPress={isSupported} />
@@ -90,6 +98,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  input: {
+    color: '#FFF'
+  },
   container: {
     flex: 1,
     alignItems: 'center',

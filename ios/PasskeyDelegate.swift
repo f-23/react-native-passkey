@@ -139,6 +139,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
   func handlePlatformPublicKeyAssertionResponse(credential: ASAuthorizationPlatformPublicKeyCredentialAssertion) -> Void {
     var largeBlob: AuthenticationExtensionsLargeBlobOutputsJSON?;
     if #available(iOS 17.0, *), let result = credential.largeBlob?.result {
+      largeBlob = AuthenticationExtensionsLargeBlobOutputsJSON()
         switch (result) {
         case .read(data: let blobData):
           if let blob = blobData?.uIntArray {

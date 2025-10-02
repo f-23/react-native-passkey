@@ -381,6 +381,11 @@ internal struct AuthenticationExtensionsPRFValues: Encodable, Decodable {
     self.second = second?.serialize()
   }
   
+  init(first: Data?, second: Data?) {
+    self.first = first
+    self.second = second
+  }
+  
   @available(iOS 18.0, *)
   func toInputValues() -> ASAuthorizationPublicKeyCredentialPRFAssertionInput.InputValues? {
     if let first = self.first {
@@ -410,7 +415,7 @@ internal struct AuthenticationExtensionsPRFInputs: Decodable {
     
     // Decode RN dictionary -> Data for `first`
     if let evalDict = try values.decodeIfPresent(AuthenticationExtensionsPRFValues.self, forKey: .eval) {
-      eval = AuthenticationExtensionsPRFValues(first: SymmetricKey.fromData(data: evalDict.first), second: SymmetricKey.fromData(data: evalDict.second))
+      eval = AuthenticationExtensionsPRFValues(first: evalDict.first, second: evalDict.second)
     }
     
     if let credentialsArray = try values.decodeIfPresent([[String: AuthenticationExtensionsPRFValues]].self, forKey: .evalByCredential) {
@@ -420,8 +425,8 @@ internal struct AuthenticationExtensionsPRFInputs: Decodable {
             for (credentialID, prfValues) in credentialDict {
                 let credentialIDData = credentialID.data(using: .utf8) ?? Data()
                 let convertedValues = AuthenticationExtensionsPRFValues(
-                    first: SymmetricKey.fromData(data: prfValues.first),
-                    second: SymmetricKey.fromData(data: prfValues.second)
+                  first: prfValues.first,
+                  second: prfValues.second
                 )
                 evalByCredential?[credentialIDData] = convertedValues
             }
@@ -505,11 +510,4 @@ extension SymmetricKey {
           Data(body)
         }
     }
-  
-  static func fromData(data: Data?) -> SymmetricKey? {
-    if let unwrappedData = data {
-      return SymmetricKey(data: unwrappedData)
-    }
-    return nil
-  }
 }
