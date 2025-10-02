@@ -42,7 +42,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       }
       
       // Create requests
-      let platformKeyRequest: ASAuthorizationRequest = self.configureCreatePlatformRequest(challenge: challenge, userId: userId, request: requestJSON);
+      let platformKeyRequest: ASAuthorizationRequest = try self.configureCreatePlatformRequest(challenge: challenge, userId: userId, request: requestJSON);
       let securityKeyRequest: ASAuthorizationRequest = self.configureCreateSecurityKeyRequest(challenge: challenge, userId: userId, request: requestJSON);
         
       // Get authorization controller
@@ -79,7 +79,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
         return;
       }
       
-      let platformKeyRequest: ASAuthorizationRequest = self.configureGetPlatformRequest(challenge: challenge, request: requestJSON);
+      let platformKeyRequest: ASAuthorizationRequest = try self.configureGetPlatformRequest(challenge: challenge, request: requestJSON);
       let securityKeyRequest: ASAuthorizationRequest = self.configureGetSecurityKeyRequest(challenge: challenge, request: requestJSON);
       
       // Get authorization controller
@@ -160,7 +160,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
   /**
    Creates and returns platform key create request
    */
-  private func configureCreatePlatformRequest(challenge: Data, userId: Data, request: RNPasskeyCredentialCreationOptions) -> ASAuthorizationPlatformPublicKeyCredentialRegistrationRequest {
+  private func configureCreatePlatformRequest(challenge: Data, userId: Data, request: RNPasskeyCredentialCreationOptions) throws -> ASAuthorizationPlatformPublicKeyCredentialRegistrationRequest {
 
     let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: request.rp.id!);
     
@@ -168,9 +168,28 @@ class Passkey: NSObject, RNPasskeyResultHandler {
                                                                            name: request.user.name,
                                                                            userID: userId);
     
+    // LargeBlob Extension
     if #available(iOS 17.0, *) {
       if let largeBlob = request.extensions?.largeBlob {
         authRequest.largeBlob = largeBlob.support?.appleise()
+      }
+    }
+    
+    // PRF Extension
+    if #available(iOS 18.0, *) {
+      if let prf = request.extensions?.prf {
+        // If evalByCredential is present at registration we throw an "Unsupported" error as specified in the WebAuthn standard
+        if prf.evalByCredential != nil {
+          throw NSError(domain: "PRF Unsupported", code: 1)
+        }
+        
+        if let first = prf.eval?.first {
+          // If at least the first input value is present we will set it accordingly
+          authRequest.prf = .inputValues(ASAuthorizationPublicKeyCredentialPRFRegistrationInput.InputValues(saltInput1: first, saltInput2: prf.eval?.second))
+        } else {
+          // Otherwise we only enable "shouldCheckForSupport"
+          authRequest.prf = .checkForSupport
+        }
       }
     }
     
@@ -190,11 +209,12 @@ class Passkey: NSObject, RNPasskeyResultHandler {
   /**
    Creates and returns platform key get request
    */
-  private func configureGetPlatformRequest(challenge: Data, request: RNPasskeyCredentialRequestOptions) -> ASAuthorizationPlatformPublicKeyCredentialAssertionRequest {
+  private func configureGetPlatformRequest(challenge: Data, request: RNPasskeyCredentialRequestOptions) throws -> ASAuthorizationPlatformPublicKeyCredentialAssertionRequest {
     
     let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: request.rpId);
     let authRequest = platformProvider.createCredentialAssertionRequest(challenge: challenge);
     
+    // LargeBlob Extension
     if #available(iOS 17.0, *) {
       if request.extensions?.largeBlob?.read == true {
         authRequest.largeBlob = ASAuthorizationPublicKeyCredentialLargeBlobAssertionInput.read;
@@ -202,6 +222,27 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       
       if let largeBlobWriteData = request.extensions?.largeBlob?.write {
         authRequest.largeBlob = ASAuthorizationPublicKeyCredentialLargeBlobAssertionInput.write(largeBlobWriteData)
+      }
+    }
+    
+    // PRF Extension
+    if #available(iOS 18.0, *) {
+      if let prf = request.extensions?.prf {
+        // Check if evalByCredential is set first
+        if prf.evalByCredential != nil {
+          // If evalByCredential is present and allowCredentials is empty we throw an "Unsupported" error as specified in the WebAuthn standard
+
+          if let allowCredentials = request.allowCredentials, allowCredentials.isEmpty {
+            throw NSError(domain: "PRF Issue", code: 1)
+          }
+          
+          if let inputValues = prf.toPerCredentialInputValues() {
+            authRequest.prf = .perCredentialInputValues(inputValues)
+          }
+        } else if let first = prf.eval?.first {
+          // If at least the first input value is present we will set it accordingly
+          authRequest.prf = .inputValues(ASAuthorizationPublicKeyCredentialPRFRegistrationInput.InputValues(saltInput1: first, saltInput2: prf.eval?.second))
+        }
       }
     }
     
@@ -265,6 +306,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       return RNPasskeyError(type: .badConfiguration, message: error.localizedDescription);
       case 31:
       return RNPasskeyError(type: .timedOut, message: error.localizedDescription);
+      case 1:
+      return RNPasskeyError(type: .notSupported, message: error.localizedDescription);
       default:
       return RNPasskeyError(type: .unknown, message: error.localizedDescription);
     }

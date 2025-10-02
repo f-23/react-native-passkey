@@ -1,7 +1,3 @@
-//
-// https://github.com/peterferguson/react-native-passkeys
-//
-
 /**
     Specification reference: https://w3c.github.io/webauthn/#typedefdef-publickeycredentialjson
 */
@@ -89,6 +85,7 @@ internal struct AuthenticatorAssertionResponseJSON: Encodable {
 */
 internal struct  AuthenticationExtensionsClientOutputsJSON: Encodable {
   var largeBlob: AuthenticationExtensionsLargeBlobOutputsJSON?
+  var prf: AuthenticationExtensionsPRFOutputsJSON?
 }
 
 /**
@@ -103,4 +100,16 @@ internal struct AuthenticationExtensionsLargeBlobOutputsJSON: Encodable {
   var blob: [UInt]?;
   
   var written: Bool?;
+}
+
+/**
+ We convert this to `AuthenticationExtensionsPRFOutputsJSON` instead of `AuthenticationExtensionsPRFOutputs` for consistency
+ and because it is what is actually returned to RN
+
+ Specification reference: https://w3c.github.io/webauthn/#dictdef-authenticationextensionsprfoutputs
+ */
+internal struct AuthenticationExtensionsPRFOutputsJSON: Encodable {
+  var enabled: Bool?;
+  
+  var results: AuthenticationExtensionsPRFValues?;
 }

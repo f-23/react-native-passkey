@@ -1,8 +1,5 @@
-//
-// https://github.com/peterferguson/react-native-passkeys
-//
-
 import AuthenticationServices
+import CryptoKit
 
 typealias Base64URLString = String
 
@@ -16,9 +13,9 @@ extension Array {
 
 extension Data {
     func toUIntArray() -> [UInt] {
-        var UIntArray = Array<UInt>(repeating: 0, count: self.count/MemoryLayout<UInt>.stride);
+        var UIntArray = Array<UInt>(repeating: 0, count: self.count/MemoryLayout<UInt>.stride)
         _ = UIntArray.withUnsafeMutableBytes { self.copyBytes(to: $0) }
-        return UIntArray;
+        return UIntArray
     }
     var uIntArray: [UInt] { toUIntArray() }
 }
@@ -165,9 +162,9 @@ internal struct AuthenticatorSelectionCriteria: Decodable {
   
   var residentKey: ResidentKeyRequirement?
   
-  var requireResidentKey: Bool? = false;
+  var requireResidentKey: Bool? = false
   
-  var userVerification: UserVerificationRequirement? = UserVerificationRequirement.preferred;
+  var userVerification: UserVerificationRequirement? = UserVerificationRequirement.preferred
   
   enum CodingKeys: String, CodingKey {
     case authenticatorAttachment
@@ -178,23 +175,23 @@ internal struct AuthenticatorSelectionCriteria: Decodable {
   
   // We have to manually decode this
   init(from decoder: any Decoder) throws {
-    let values = try decoder.container(keyedBy: CodingKeys.self);
+    let values = try decoder.container(keyedBy: CodingKeys.self)
     
-    let authenticatorAttachmentValue = try values.decodeIfPresent(String.self, forKey: .authenticatorAttachment);
+    let authenticatorAttachmentValue = try values.decodeIfPresent(String.self, forKey: .authenticatorAttachment)
     if let authenticatorAttachmentString = authenticatorAttachmentValue {
-      authenticatorAttachment = AuthenticatorAttachment(rawValue: authenticatorAttachmentString);
+      authenticatorAttachment = AuthenticatorAttachment(rawValue: authenticatorAttachmentString)
     }
     
-    let residentKeyValue = try values.decodeIfPresent(String.self, forKey: .residentKey);
+    let residentKeyValue = try values.decodeIfPresent(String.self, forKey: .residentKey)
     if let residentKeyString = residentKeyValue {
-      residentKey = ResidentKeyRequirement(rawValue: residentKeyString);
+      residentKey = ResidentKeyRequirement(rawValue: residentKeyString)
     }
     
-    requireResidentKey = try values .decodeIfPresent(Bool.self, forKey: .requireResidentKey);
+    requireResidentKey = try values .decodeIfPresent(Bool.self, forKey: .requireResidentKey)
     
-    let userVerificationValue = try values.decodeIfPresent(String.self, forKey: .userVerification);
+    let userVerificationValue = try values.decodeIfPresent(String.self, forKey: .userVerification)
     if let userVerificationString = userVerificationValue {
-      userVerification = UserVerificationRequirement(rawValue: userVerificationString);
+      userVerification = UserVerificationRequirement(rawValue: userVerificationString)
     }
   }
 }
@@ -226,16 +223,16 @@ internal struct PublicKeyCredentialParameters: Decodable {
   
   // We have to manually decode this
   init(from decoder: any Decoder) throws {
-    let values = try decoder.container(keyedBy: CodingKeys.self);
+    let values = try decoder.container(keyedBy: CodingKeys.self)
     
-    let algValue = try values.decodeIfPresent(Int.self, forKey: .alg);
+    let algValue = try values.decodeIfPresent(Int.self, forKey: .alg)
     if let algInt = algValue {
-      alg = ASCOSEAlgorithmIdentifier(algInt);
+      alg = ASCOSEAlgorithmIdentifier(algInt)
     }
 
-    let typeValue = try values.decodeIfPresent(String.self, forKey: .type);
+    let typeValue = try values.decodeIfPresent(String.self, forKey: .type)
     if let typeString = typeValue {
-      type = PublicKeyCredentialType(rawValue: typeString) ?? .publicKey;
+      type = PublicKeyCredentialType(rawValue: typeString) ?? .publicKey
     }
   }
 }
@@ -298,13 +295,13 @@ internal struct PublicKeyCredentialDescriptor: Decodable {
   
   // We have to manually decode this
   init(from decoder: any Decoder) throws {
-    let values = try decoder.container(keyedBy: CodingKeys.self);
+    let values = try decoder.container(keyedBy: CodingKeys.self)
     
-    id = try values.decodeIfPresent(String.self, forKey: .id)!;
+    id = try values.decodeIfPresent(String.self, forKey: .id)!
     
-    transports = try values.decodeIfPresent([AuthenticatorTransport].self, forKey: .transports);
+    transports = try values.decodeIfPresent([AuthenticatorTransport].self, forKey: .transports)
 
-    let typeValue = try values.decodeIfPresent(String.self, forKey: .type);
+    let typeValue = try values.decodeIfPresent(String.self, forKey: .type)
     if let typeString = typeValue {
       type = PublicKeyCredentialType(rawValue: typeString) ?? .publicKey
     }
@@ -334,19 +331,124 @@ internal struct AuthenticationExtensionsLargeBlobInputs: Decodable {
   
   // We have to manually decode this
   init(from decoder: any Decoder) throws {
-    let values = try decoder.container(keyedBy: CodingKeys.self);
+    let values = try decoder.container(keyedBy: CodingKeys.self)
     
-    let supportValue = try values.decodeIfPresent(String.self, forKey: .support);
+    let supportValue = try values.decodeIfPresent(String.self, forKey: .support)
     if let supportString = supportValue {
-      support = LargeBlobSupport(rawValue: supportString);
+      support = LargeBlobSupport(rawValue: supportString)
     }
     
-    read = try values.decodeIfPresent(Bool.self, forKey: .read);
+    read = try values.decodeIfPresent(Bool.self, forKey: .read)
     
     // RN converts UInt8Array to Dictionary, need to decode it
-    let writeDict = try values.decodeIfPresent([String : Int].self, forKey: .write);
+    let writeDict = try values.decodeIfPresent([String : Int].self, forKey: .write)
     // sort dict, convert to array and then data
-    write = writeDict?.sorted(by: { $0.key < $1.key }).map({ $0.value }).data;
+    write = writeDict?.sorted(by: { $0.key < $1.key }).map({ $0.value }).data
+  }
+}
+
+internal struct AuthenticationExtensionsPRFValues: Encodable, Decodable {
+  var first: Data?
+  var second: Data?
+  
+  enum CodingKeys: String, CodingKey {
+    case first
+    case second
+  }
+    
+  init(from decoder: any Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    
+    // Decode RN dictionary -> Data for `first`
+    if let firstDict = try values.decodeIfPresent([String: Int].self, forKey: .first) {
+        first = firstDict
+            .sorted { Int($0.key)! < Int($1.key)! }
+            .map { UInt8($0.value) }
+            .data
+    }
+    
+    // Decode RN dictionary -> Data for `second`
+    if let secondDict = try values.decodeIfPresent([String: Int].self, forKey: .second) {
+        second = secondDict
+            .sorted { Int($0.key)! < Int($1.key)! }
+            .map { UInt8($0.value) }
+            .data
+    }
+  }
+  
+  init(first: SymmetricKey?, second: SymmetricKey?) {
+    self.first = first?.serialize()
+    self.second = second?.serialize()
+  }
+  
+  @available(iOS 18.0, *)
+  func toInputValues() -> ASAuthorizationPublicKeyCredentialPRFAssertionInput.InputValues? {
+    if let first = self.first {
+      return ASAuthorizationPublicKeyCredentialPRFAssertionInput.InputValues(saltInput1: first, saltInput2: self.second)
+    }
+    return nil
+  }
+}
+
+/**
+    Specification reference: https://w3c.github.io/webauthn/#dictdef-authenticationextensionsprfinputs
+*/
+internal struct AuthenticationExtensionsPRFInputs: Decodable {
+    
+  var eval: AuthenticationExtensionsPRFValues?
+    
+  // Mapping of credential IDs -> PRFValues
+  var evalByCredential: [Data: AuthenticationExtensionsPRFValues]?
+    
+  enum CodingKeys: String, CodingKey {
+      case eval
+      case evalByCredential
+  }
+  
+  init(from decoder: any Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    
+    // Decode RN dictionary -> Data for `first`
+    if let evalDict = try values.decodeIfPresent(AuthenticationExtensionsPRFValues.self, forKey: .eval) {
+      eval = AuthenticationExtensionsPRFValues(first: SymmetricKey.fromData(data: evalDict.first), second: SymmetricKey.fromData(data: evalDict.second))
+    }
+    
+    if let credentialsArray = try values.decodeIfPresent([[String: AuthenticationExtensionsPRFValues]].self, forKey: .evalByCredential) {
+        evalByCredential = [:]
+        
+        for credentialDict in credentialsArray {
+            for (credentialID, prfValues) in credentialDict {
+                let credentialIDData = credentialID.data(using: .utf8) ?? Data()
+                let convertedValues = AuthenticationExtensionsPRFValues(
+                    first: SymmetricKey.fromData(data: prfValues.first),
+                    second: SymmetricKey.fromData(data: prfValues.second)
+                )
+                evalByCredential?[credentialIDData] = convertedValues
+            }
+        }
+    }
+  }
+  
+  // Converts the evalByCredential array to correct ASAuthorization type
+  @available(iOS 18.0, *)
+  func toPerCredentialInputValues() -> [Data: ASAuthorizationPublicKeyCredentialPRFAssertionInput.InputValues]? {
+    if let evalByCredential = self.evalByCredential {
+      
+      var credentialInputValues: [Data: ASAuthorizationPublicKeyCredentialPRFAssertionInput.InputValues] = [:]
+      
+      for (credentialID, value) in evalByCredential {
+        guard let inputValues = value.toInputValues() else {
+          print("Failed to convert PRF Input Values \(value)")
+          continue
+        }
+        
+        credentialInputValues[credentialID] = inputValues
+      }
+      
+      return credentialInputValues
+    }
+    
+    return nil
   }
 }
 
@@ -356,10 +458,12 @@ internal struct AuthenticationExtensionsLargeBlobInputs: Decodable {
 */
 internal struct AuthenticationExtensionsClientInputs: Decodable {
   var largeBlob: AuthenticationExtensionsLargeBlobInputs?
+  var prf: AuthenticationExtensionsPRFInputs?
 }
 
-// ! There is only one webauthn extension currently supported on iOS as of iOS 17.0:
+// ! There is only two webauthn extensions currently supported on iOS as of iOS 18.0:
 // - largeBlob extension: https://w3c.github.io/webauthn/#sctn-large-blob-extension
+// - prf extension: https://w3c.github.io/webauthn/#prf-extension
 
 internal struct AuthenticationExtensionsClientOutputs {
   
@@ -368,14 +472,44 @@ internal struct AuthenticationExtensionsClientOutputs {
    */
   internal struct AuthenticationExtensionsLargeBlobOutputs {
     // - true if, and only if, the created credential supports storing large blobs. Only present in registration outputs.
-    let supported: Bool?;
+    let supported: Bool?
     
     // - The opaque byte string that was associated with the credential identified by rawId. Only valid if read was true.
     let blob: Data?
     
     // - A boolean that indicates that the contents of write were successfully stored on the authenticator, associated with the specified credential.
-    let  written: Bool?;
+    let  written: Bool?
   }
   
   let largeBlob: AuthenticationExtensionsLargeBlobOutputs?
+  
+  /**
+  Specification reference: https://w3c.github.io/webauthn/#dictdef-authenticationextensionsclientoutputs
+   */
+  internal struct AuthenticationExtensionsPRFOutputs {
+    // - true if the created credential supports PRF. Only present in registration outputs.
+    let enabled: Bool?
+    
+    // - The results of evaluating the PRF for the inputs given in eval or evalByCredential. Outputs may not be available during registration.
+    let results: AuthenticationExtensionsPRFValues?
+  }
+  
+  let prf: AuthenticationExtensionsPRFOutputs?
+  
+}
+
+// Used for PRF extension
+extension SymmetricKey {
+    func serialize() -> Data {
+        return self.withUnsafeBytes { body in
+          Data(body)
+        }
+    }
+  
+  static func fromData(data: Data?) -> SymmetricKey? {
+    if let unwrappedData = data {
+      return SymmetricKey(data: unwrappedData)
+    }
+    return nil
+  }
 }
