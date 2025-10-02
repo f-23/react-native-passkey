@@ -30,16 +30,16 @@ internal enum AuthenticatorTransport: String, Codable {
     case nfc
     case usb
   
-    func appleise() -> ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport? {
+    func appleise() -> [ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport]? {
         switch self {
         case .ble:
-            return ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.bluetooth
+            return [ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.bluetooth]
         case .nfc:
-            return ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.nfc
+            return [ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.nfc]
         case .usb:
-            return ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.usb
+            return [ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.usb]
         default:
-            return nil
+          return ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.allSupported
         }
     }
 }
@@ -268,7 +268,7 @@ internal struct PublicKeyCredentialDescriptor: Decodable {
 
   var id: Base64URLString
 
-  var transports: [AuthenticatorTransport]?
+  var transports: AuthenticatorTransport?
 
   var type: PublicKeyCredentialType = .publicKey
 
@@ -279,8 +279,8 @@ internal struct PublicKeyCredentialDescriptor: Decodable {
   func getCrossPlatformDescriptor() -> ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor {
     var transports = ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.allSupported
     
-    if self.transports?.isEmpty == false {
-      transports = self.transports!.compactMap { $0.appleise() }
+    if self.transports?.appleise()?.isEmpty == false {
+      transports = self.transports!.appleise()!.compactMap { $0 }
     }
     
     return ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.init(credentialID: Data(base64URLEncoded: self.id)!,
@@ -299,8 +299,9 @@ internal struct PublicKeyCredentialDescriptor: Decodable {
     
     id = try values.decodeIfPresent(String.self, forKey: .id)!
     
-    transports = try values.decodeIfPresent([AuthenticatorTransport].self, forKey: .transports)
-
+    let transportStrings = try values.decodeIfPresent([String].self, forKey: .transports) ?? []
+    transports = transportStrings.compactMap { AuthenticatorTransport(rawValue: $0) }.first ?? .none
+    
     let typeValue = try values.decodeIfPresent(String.self, forKey: .type)
     if let typeString = typeValue {
       type = PublicKeyCredentialType(rawValue: typeString) ?? .publicKey
