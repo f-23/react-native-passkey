@@ -142,8 +142,11 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
       largeBlob = AuthenticationExtensionsLargeBlobOutputsJSON()
         switch (result) {
         case .read(data: let blobData):
-          if let blob = blobData?.uIntArray {
-            largeBlob?.blob = blob;
+          if let blob = blobData {
+            // get uIntArray, then transform to a dictionary RN can work with
+            largeBlob?.blob = Dictionary(uniqueKeysWithValues: blob.uIntArray.enumerated().map { (index, value) in
+              (String(index + 1), Int(value))
+            })
           }
         case .write(success: let successfullyWritten):
           largeBlob?.written = successfullyWritten;

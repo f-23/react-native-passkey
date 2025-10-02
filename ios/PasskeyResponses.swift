@@ -97,7 +97,7 @@ internal struct  AuthenticationExtensionsClientOutputsJSON: Encodable {
 internal struct AuthenticationExtensionsLargeBlobOutputsJSON: Encodable {
   var supported: Bool?;
   
-  var blob: [UInt]?;
+  var blob: [String: Int]?;
   
   var written: Bool?;
 }

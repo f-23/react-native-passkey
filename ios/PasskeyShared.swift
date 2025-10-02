@@ -466,43 +466,6 @@ internal struct AuthenticationExtensionsClientInputs: Decodable {
   var prf: AuthenticationExtensionsPRFInputs?
 }
 
-// ! There is only two webauthn extensions currently supported on iOS as of iOS 18.0:
-// - largeBlob extension: https://w3c.github.io/webauthn/#sctn-large-blob-extension
-// - prf extension: https://w3c.github.io/webauthn/#prf-extension
-
-internal struct AuthenticationExtensionsClientOutputs {
-  
-  /**
-  Specification reference: https://w3c.github.io/webauthn/#dictdef-authenticationextensionslargebloboutputs
-   */
-  internal struct AuthenticationExtensionsLargeBlobOutputs {
-    // - true if, and only if, the created credential supports storing large blobs. Only present in registration outputs.
-    let supported: Bool?
-    
-    // - The opaque byte string that was associated with the credential identified by rawId. Only valid if read was true.
-    let blob: Data?
-    
-    // - A boolean that indicates that the contents of write were successfully stored on the authenticator, associated with the specified credential.
-    let  written: Bool?
-  }
-  
-  let largeBlob: AuthenticationExtensionsLargeBlobOutputs?
-  
-  /**
-  Specification reference: https://w3c.github.io/webauthn/#dictdef-authenticationextensionsclientoutputs
-   */
-  internal struct AuthenticationExtensionsPRFOutputs {
-    // - true if the created credential supports PRF. Only present in registration outputs.
-    let enabled: Bool?
-    
-    // - The results of evaluating the PRF for the inputs given in eval or evalByCredential. Outputs may not be available during registration.
-    let results: AuthenticationExtensionsPRFValues?
-  }
-  
-  let prf: AuthenticationExtensionsPRFOutputs?
-  
-}
-
 // Used for PRF extension
 extension SymmetricKey {
     func serialize() -> Data {
