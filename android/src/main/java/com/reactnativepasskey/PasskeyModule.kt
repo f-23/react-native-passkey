@@ -25,13 +25,13 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
   }
 
   @ReactMethod
-  fun create(requestJson: String, promise: Promise) {
+  fun create(requestJson: String, forcePlatformKey: Boolean, forceSecurityKey: Boolean, promise: Promise) {
     val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
     val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(requestJson)
 
     mainScope.launch {
       try {
-        val result = currentActivity?.let { credentialManager.createCredential(it, createPublicKeyCredentialRequest) }
+        val result = reactApplicationContext.currentActivity?.let { credentialManager.createCredential(it, createPublicKeyCredentialRequest) }
 
         val response =
           result?.data?.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON")
@@ -70,7 +70,7 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
   }
 
   @ReactMethod
-  fun get(requestJson: String, promise: Promise) {
+  fun get(requestJson: String, forcePlatformKey: Boolean, forceSecurityKey: Boolean, promise: Promise) {
       val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
       val getCredentialRequest =
         GetCredentialRequest(listOf(GetPublicKeyCredentialOption(requestJson)))
@@ -78,7 +78,7 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       mainScope.launch {
         try {
           val result =
-            currentActivity?.let { credentialManager.getCredential(it, getCredentialRequest) }
+            reactApplicationContext.currentActivity?.let { credentialManager.getCredential(it, getCredentialRequest) }
 
           val response =
             result?.credential?.data?.getString("androidx.credentials.BUNDLE_KEY_AUTHENTICATION_RESPONSE_JSON")

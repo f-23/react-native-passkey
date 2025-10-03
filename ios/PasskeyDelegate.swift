@@ -1,5 +1,6 @@
 import Foundation
 import AuthenticationServices
+import CryptoKit
 
 @available(iOS 15.0, *)
 protocol RNPasskeyResultHandler {
@@ -64,6 +65,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
       _completionHandler.onError(ASAuthorizationError(ASAuthorizationError.invalidResponse));
     }
     
+    // LargeBlob Extension
     var largeBlob: AuthenticationExtensionsLargeBlobOutputsJSON?;
     if #available(iOS 17.0, *) {
       if (credential.largeBlob != nil) {
@@ -72,8 +74,22 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
         );
       }
     }
+    
+    // PRF Extension
+    var prf: AuthenticationExtensionsPRFOutputsJSON?;
+    if #available(iOS 18.0, *) {
+      if (credential.prf != nil) {
+        prf = AuthenticationExtensionsPRFOutputsJSON(
+          enabled: credential.prf?.isSupported,
+          results: AuthenticationExtensionsPRFValues(
+            first: credential.prf?.first,
+            second: credential.prf?.second
+          )
+        )
+      }
+    }
       
-    let clientExtensionResults = (largeBlob != nil) ? AuthenticationExtensionsClientOutputsJSON(largeBlob: largeBlob) : nil;
+    let clientExtensionResults = (largeBlob != nil || prf != nil) ? AuthenticationExtensionsClientOutputsJSON(largeBlob: largeBlob, prf: prf) : nil;
     
     let response =  AuthenticatorAttestationResponseJSON(
       clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
@@ -100,10 +116,8 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     // Credential transports is only available on iOS 17.5+, so we need to check it here
     // If device is running <17.5, return an empty array
     if #available(iOS 17.5, *) {
-      if let securityKeyCredential = credential as? ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor {
-        transports = securityKeyCredential.transports.compactMap { transport in
-          AuthenticatorTransport(rawValue: transport.rawValue)
-        }
+      transports = credential.transports.compactMap { transport in
+        AuthenticatorTransport(rawValue: transport.rawValue)
       }
     }
      
@@ -123,12 +137,16 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
   }
   
   func handlePlatformPublicKeyAssertionResponse(credential: ASAuthorizationPlatformPublicKeyCredentialAssertion) -> Void {
-    var largeBlob: AuthenticationExtensionsLargeBlobOutputsJSON? = AuthenticationExtensionsLargeBlobOutputsJSON()
+    var largeBlob: AuthenticationExtensionsLargeBlobOutputsJSON?;
     if #available(iOS 17.0, *), let result = credential.largeBlob?.result {
+      largeBlob = AuthenticationExtensionsLargeBlobOutputsJSON()
         switch (result) {
         case .read(data: let blobData):
-          if let blob = blobData?.uIntArray {
-            largeBlob?.blob = blob;
+          if let blob = blobData {
+            // get uIntArray, then transform to a dictionary RN can work with
+            largeBlob?.blob = Dictionary(uniqueKeysWithValues: blob.uIntArray.enumerated().map { (index, value) in
+              (String(index + 1), Int(value))
+            })
           }
         case .write(success: let successfullyWritten):
           largeBlob?.written = successfullyWritten;
@@ -136,7 +154,20 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
         }
     }
     
-    let clientExtensionResults = AuthenticationExtensionsClientOutputsJSON(largeBlob: largeBlob);
+    // PRF Extension
+    var prf: AuthenticationExtensionsPRFOutputsJSON?;
+    if #available(iOS 18.0, *) {
+      if (credential.prf != nil) {
+        prf = AuthenticationExtensionsPRFOutputsJSON(
+          results: AuthenticationExtensionsPRFValues(
+            first: credential.prf?.first,
+            second: credential.prf?.second
+          )
+        )
+      }
+    }
+    
+    let clientExtensionResults = (largeBlob != nil || prf != nil) ? AuthenticationExtensionsClientOutputsJSON(largeBlob: largeBlob, prf: prf) : nil;
     let userHandle: String? = credential.userID.flatMap { String(data: $0, encoding: .utf8) };
 
     let response = AuthenticatorAssertionResponseJSON(

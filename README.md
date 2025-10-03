@@ -4,6 +4,7 @@
 
 Native Passkeys on iOS 15.0+ and Android API 28+ using React Native.
 
+> You can find an example backend for testing [here](https://github.com/f-23/passkey-server-example).
 
 ## Installation
 
@@ -92,6 +93,8 @@ The Android specific configuration is similar to iOS. If you have already set up
   }]
   ```
 
+> If you are having issues with your backend setup you can look at an example [here](https://github.com/f-23/passkey-server-example).
+
 ---
 
 ## Usage
@@ -148,21 +151,176 @@ try {
 }
 ```
 
-### Security Keys (iOS-specific)
+### Force Platform or Security Key (iOS-specific)
 
-You can allow or disallow users to register using a Security Key (like [Yubikey](https://www.yubico.com/)).
+You can force users to register and authenticate using either a platform key, a security key (like [Yubikey](https://www.yubico.com/)) or allow both using the following methods. This only works on iOS, Android will ignore these instructions.
 
-For this just set the `authenticatorAttachment` field in your Passkey request to `platform` or `cross-platform`, depending on your preference.
+#### Create Passkey
+
+- `Passkey.create()` - Allow the user to choose between platform and security passkey
+- `Passkey.createPlatformKey()` - Force the user to create a platform passkey
+- `Passkey.createSecurityKey()` - Force the user to create a security passkey
+
+#### Get Passkey
+
+- `Passkey.get()` - Allow the user to choose between platform and security passkey
+- `Passkey.getPlatformKey()` - Force the user to authenticate using a platform passkey
+- `Passkey.getSecurityKey()` - Force the user to authenticate using a security passkey
 
 ### Extensions
 
 #### largeBlob
 
-As of version 3.0 the newly added largeBlob extension should work out of the box for iOS only.
+As of version 3.0 the largeBlob extension will work on iOS 17+ only.
 
-#### PRF
+##### Example
 
-As of version 3.0 the newly added largeBlob extension should work out of the box for Android only.
+You can use the largeBlob extension to store a small amount of opaque data associated with the stored passkey.
+
+###### Check for largeBlob support
+
+During registration you can check for largeBlob extension support on the selected authenticator.
+
+```ts
+// Request
+{
+  ...
+  extensions: {
+    largeBlob: {
+      support: true
+    }
+  }
+}
+
+// Response
+{
+  ...
+  clientExtensionResults: {
+      supported: boolean
+  }
+}
+```
+
+###### Write data
+
+If the largeBlob extension is supported you can write data to it during the assertion process (this does NOT work during registration).
+
+```ts
+// Request
+{
+  ...
+  extensions: {
+    largeBlob: {
+      write: Uint8Array<ArrayBuffer>
+    }
+  }
+}
+
+// Response
+{
+  ...
+  clientExtensionResults: { 
+    largeBlob: { 
+      written: true 
+    } 
+  }
+}
+```
+
+###### Read data
+
+After writing you can read the data on any following assertion.
+
+```ts
+// Request
+{
+  ...
+  extensions: {
+    largeBlob: {
+      read: true
+    }
+  }
+}
+
+// Response
+{
+  ...
+  clientExtensionResults: { l
+    largeBlob: { 
+      blob: Uint8Array<ArrayBuffer>
+    } 
+  }
+}
+```
+
+You can find information on the largeBlob extension in the WebAuthn specification [here](https://w3c.github.io/webauthn/#sctn-large-blob-extension).
+
+#### Pseudo-Random Function (PRF)
+
+As of version 3.3 the PRF extension will work for Android and iOS 18+.
+
+##### Example
+
+You can use the PRF extension to retrieve a secret which allows for various use cases like encryption of user data.
+
+During registration you can either pass in an empty object (this will check for PRF support) or a salt (with an optional second) to retrieve the secret.
+
+###### Check for PRF support
+```ts
+// Request
+{
+  ...
+  extensions: {
+    prf: {}
+  }
+}
+
+// Response
+{
+  ...
+  clientExtensionResults: {
+    prf: {
+      enabled: boolean
+      results: {}
+    }
+  }
+}
+```
+
+###### Retrieve secret
+
+You can do this either when creating or when asserting the passkey.
+
+```ts
+// Request
+{
+  ...
+  extensions: {
+    prf: {
+      eval: {
+        first: Uint8Array<ArrayBuffer>
+        second: Uint8Array<ArrayBuffer> // optional
+      }
+    }
+  }
+}
+
+// Response
+{
+  ...
+  clientExtensionResults: { 
+    prf: { 
+      enabled: true 
+      results: { 
+          first: 'Be3rf7AK8fwisd9vO13uqaP92XA24jKMSUaEaMclWIk=',
+          second: 'jbVCsIGJvtSWv6LRG3fHpUaG/BvT75b8ZLRAuLBNUpk='
+      },
+    } 
+  }
+}
+```
+
+You can also use `evalByCredential` to retrieve secrets for specific credentials. You can read more in the WebAuthn specification [here](https://w3c.github.io/webauthn/#prf-extension).
 
 ---
 

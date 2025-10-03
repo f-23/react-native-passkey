@@ -1,7 +1,3 @@
-//
-// https://github.com/peterferguson/react-native-passkeys
-//
-
 import AuthenticationServices
 
 /**

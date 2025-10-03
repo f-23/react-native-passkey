@@ -1,5 +1,4 @@
 # OSX
-#
 .DS_Store
 
 # XDE
@@ -10,7 +9,6 @@
 jsconfig.json
 
 # Xcode
-#
 build/
 *.pbxuser
 !default.pbxuser
@@ -27,10 +25,9 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
-project.xcworkspace
+**/.xcode.env.local
 
 # Android/IJ
-#
 .classpath
 .cxx
 .gradle
@@ -44,14 +41,12 @@ android/gradlew
 android/gradlew.bat
 
 # Cocoapods
-#
 example/ios/Pods
 
 # Ruby
 example/vendor/
 
 # node.js
-#
 node_modules/
 npm-debug.log
 yarn-debug.log

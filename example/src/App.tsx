@@ -3,22 +3,43 @@ import * as React from 'react';
 import { StyleSheet, View, Button, TextInput, Alert } from 'react-native';
 import { Passkey } from 'react-native-passkey';
 
-import RegRequest from '../../src/__tests__/testData/RegRequest.json';
-import AuthRequest from '../../src/__tests__/testData/AuthRequest.json';
+const url = 'https://XYZ.ngrok-free.app'; // REPLACE with your domain (e.g. ngrok)
 
 export default function App() {
   const [email, setEmail] = React.useState('');
 
   async function createAccount() {
     try {
-      const requestJson = {
-        // ...Retrieve request from server
-        ...RegRequest,
-      };
+      // Fetch the request object
+      const response = await fetch(`${url}/auth/new`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
 
+      const requestJson = await response.json();
+      console.log(requestJson);
+
+      // Perform passkey creation
       const result = await Passkey.create(requestJson);
 
-      console.log('Registration result: ', result);
+      console.log(result);
+
+      // Verify the response from the authenticator
+      const verifyResponse = await fetch(`${url}/auth/new/verify`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...result, platform: 'ios' }),
+      });
+      const verifyResponseJson = await verifyResponse.json();
+
+      console.log('Create result: ', verifyResponseJson);
     } catch (e) {
       console.log(e);
     }
@@ -26,14 +47,36 @@ export default function App() {
 
   async function authenticateAccount() {
     try {
-      const requestJson = {
-        // ...Retrieve request from server
-        ...AuthRequest,
-      };
+      // Fetch the request object
+      const response = await fetch(`${url}/auth`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      const requestJson = await response.json();
 
+      console.log(requestJson);
+
+      // Perform passkey assertion
       const result = await Passkey.get(requestJson);
 
-      console.log('Authentication result: ', result);
+      console.log(result);
+
+      // Verify the response from the authenticator
+      const verifyResponse = await fetch(`${url}/auth/verify`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...result, platform: 'ios' }),
+      });
+      const verifyResponseJson = await verifyResponse.json();
+
+      console.log('Get result: ', verifyResponseJson);
     } catch (e) {
       console.log(e);
     }
@@ -46,7 +89,12 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <TextInput placeholder="email" value={email} onChangeText={setEmail} />
+      <TextInput
+        style={styles.input}
+        placeholder="email"
+        value={email}
+        onChangeText={setEmail}
+      />
       <Button title="Create Account" onPress={createAccount} />
       <Button title="Authenticate" onPress={authenticateAccount} />
       <Button title="isSupported?" onPress={isSupported} />
@@ -55,6 +103,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  input: {
+    color: '#FFF',
+  },
   container: {
     flex: 1,
     alignItems: 'center',
