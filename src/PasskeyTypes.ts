@@ -44,21 +44,20 @@ export interface PasskeyCreateResult {
   id: string;
   rawId: string;
   type?: string;
+  authenticatorAttachment?: string;
   response: {
     clientDataJSON: string;
     attestationObject: string;
   };
-  extensions?: {
-    clientExtensionResults?: {
-      largeBlob?: {
-        supported?: boolean;
-        blob?: Uint8Array;
-        written?: boolean;
-      };
-      prf: {
-        enabled?: boolean;
-        results?: AuthenticationExtensionsPRFValues;
-      };
+  clientExtensionResults?: {
+    largeBlob?: {
+      supported?: boolean;
+      blob?: Uint8Array;
+      written?: boolean;
+    };
+    prf: {
+      enabled?: boolean;
+      results?: AuthenticationExtensionsPRFValues;
     };
   };
 }
@@ -89,6 +88,7 @@ export interface PasskeyGetResult {
   id: string;
   rawId: string;
   type?: string;
+  authenticatorAttachment?: string;
   response: {
     authenticatorData: string;
     clientDataJSON: string;
