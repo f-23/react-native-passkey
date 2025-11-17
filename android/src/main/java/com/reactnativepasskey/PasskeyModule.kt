@@ -37,7 +37,8 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
           result?.data?.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON")
         promise.resolve(response)
       } catch (e: CreateCredentialException) {
-        promise.reject("Passkey", handleRegistrationException(e))
+        val errorCode = handleRegistrationException(e)
+        promise.reject(errorCode, errorCode)
       }
     }
   }
@@ -84,7 +85,8 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
             result?.credential?.data?.getString("androidx.credentials.BUNDLE_KEY_AUTHENTICATION_RESPONSE_JSON")
           promise.resolve(response)
         } catch (e: GetCredentialException) {
-          promise.reject("Passkey", handleAuthenticationException(e))
+          val errorCode = handleAuthenticationException(e)
+          promise.reject(errorCode, errorCode)
         }
       }
   }

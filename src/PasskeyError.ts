@@ -63,14 +63,16 @@ export const NativeError = (
   };
 };
 
-export function handleNativeError(_error: unknown): PasskeyError {
-  if (typeof _error !== 'object') {
+export interface TNativeError {
+  code?: string;
+}
+
+export function handleNativeError(_error: TNativeError): PasskeyError {
+  if (!_error.code) {
     return UnknownError;
   }
 
-  const error = String(_error).split(' ')[1];
-
-  switch (error) {
+  switch (_error.code) {
     case 'NotSupported': {
       return NotSupportedError;
     }

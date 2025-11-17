@@ -1,4 +1,8 @@
-import { handleNativeError, NotSupportedError } from './PasskeyError';
+import {
+  handleNativeError,
+  NotSupportedError,
+  TNativeError,
+} from './PasskeyError';
 import { Platform } from 'react-native';
 import type {
   PasskeyCreateRequest,
@@ -35,8 +39,8 @@ export class Passkey {
         return JSON.parse(response) as PasskeyCreateResult;
       }
       return response as PasskeyCreateResult;
-    } catch (error) {
-      throw handleNativeError(error);
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
     }
   }
 
@@ -67,8 +71,8 @@ export class Passkey {
         return JSON.parse(response) as PasskeyCreateResult;
       }
       return response as PasskeyCreateResult;
-    } catch (error) {
-      throw handleNativeError(error);
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
     }
   }
 
@@ -99,8 +103,8 @@ export class Passkey {
         return JSON.parse(response) as PasskeyCreateResult;
       }
       return response as PasskeyCreateResult;
-    } catch (error) {
-      throw handleNativeError(error);
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
     }
   }
 
@@ -130,8 +134,8 @@ export class Passkey {
         return JSON.parse(response) as PasskeyGetResult;
       }
       return response as PasskeyGetResult;
-    } catch (error) {
-      throw handleNativeError(error);
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
     }
   }
 
@@ -162,8 +166,8 @@ export class Passkey {
         return JSON.parse(response) as PasskeyGetResult;
       }
       return response as PasskeyGetResult;
-    } catch (error) {
-      throw handleNativeError(error);
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
     }
   }
 
@@ -194,8 +198,8 @@ export class Passkey {
         return JSON.parse(response) as PasskeyGetResult;
       }
       return response as PasskeyGetResult;
-    } catch (error) {
-      throw handleNativeError(error);
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
     }
   }
 
