@@ -112,7 +112,7 @@ const isSupported: boolean = Passkey.isSupported();
 #### Creating a new Passkey
 
 ```ts
-import { Passkey, PasskeyRegistrationResult } from 'react-native-passkey';
+import { Passkey, PasskeyCreateResult } from 'react-native-passkey';
 
 // Retrieve a valid FIDO2 attestation request from your server
 // The challenge inside the request needs to be a base64URL encoded string
@@ -121,7 +121,7 @@ import { Passkey, PasskeyRegistrationResult } from 'react-native-passkey';
 try {
   // Call the `create` method with the retrieved request in JSON format
   // A native overlay will be displayed
-  const result: PasskeyRegistrationResult = await Passkey.create(requestJson);
+  const result: PasskeyCreateResult = await Passkey.create(requestJson);
 
   // The `create` method returns a FIDO2 attestation result
   // Pass it to your server for verification
@@ -133,7 +133,7 @@ try {
 #### Authenticating with existing Passkey
 
 ```ts
-import { Passkey, PasskeyAuthenticationResult } from 'react-native-passkey';
+import { Passkey, PasskeyGetResult } from 'react-native-passkey';
 
 // Retrieve a valid FIDO2 assertion request from your server 
 // The challenge inside the request needs to be a base64URL encoded string
@@ -142,7 +142,7 @@ import { Passkey, PasskeyAuthenticationResult } from 'react-native-passkey';
 try {
   // Call the `get` method with the retrieved request in JSON format 
   // A native overlay will be displayed
-  const result: PasskeyAuthResult = await Passkey.get(requestJson);
+  const result: PasskeyGetResult = await Passkey.get(requestJson);
 
   // The `get` method returns a FIDO2 assertion result
   // Pass it to your server for verification
