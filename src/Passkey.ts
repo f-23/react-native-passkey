@@ -210,7 +210,7 @@ export class Passkey {
    */
   public static isSupported(): boolean {
     if (Platform.OS === 'android') {
-      return Platform.Version > 28;
+      return Platform.Version >= 28;
     }
 
     if (Platform.OS === 'ios') {

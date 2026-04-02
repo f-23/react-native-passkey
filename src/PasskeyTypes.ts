@@ -31,9 +31,7 @@ export interface PasskeyCreateRequest {
     };
     prf?: {
       eval?: AuthenticationExtensionsPRFValues;
-      evalByCredential?: Array<
-        Record<string, AuthenticationExtensionsPRFValues>
-      >;
+      evalByCredential?: [string: AuthenticationExtensionsPRFValues];
     };
   };
 }
@@ -61,7 +59,7 @@ export interface PasskeyCreateResult {
       blob?: Record<string, number>;
       written?: boolean;
     };
-    prf?: {
+    prf: {
       enabled?: boolean;
       results?: AuthenticationExtensionsPRFValues;
     };
@@ -85,9 +83,7 @@ export interface PasskeyGetRequest {
     };
     prf?: {
       eval?: AuthenticationExtensionsPRFValues;
-      evalByCredential?: Array<
-        Record<string, AuthenticationExtensionsPRFValues>
-      >;
+      evalByCredential?: [string: AuthenticationExtensionsPRFValues];
     };
   };
 }
@@ -114,7 +110,7 @@ export interface PasskeyGetResult {
       blob?: Record<string, number>;
       written?: boolean;
     };
-    prf?: {
+    prf: {
       enabled?: boolean;
       results?: AuthenticationExtensionsPRFValues;
     };

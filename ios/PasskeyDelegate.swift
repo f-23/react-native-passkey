@@ -143,10 +143,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
         switch (result) {
         case .read(data: let blobData):
           if let blob = blobData {
-            // get uIntArray, then transform to a dictionary RN can work with
-            largeBlob?.blob = Dictionary(uniqueKeysWithValues: blob.uIntArray.enumerated().map { (index, value) in
-              (String(index + 1), Int(value))
-            })
+            largeBlob?.blob = Array(blob)
           }
         case .write(success: let successfullyWritten):
           largeBlob?.written = successfullyWritten;
