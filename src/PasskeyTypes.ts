@@ -59,7 +59,7 @@ export interface PasskeyCreateResult {
       blob?: Record<string, number>;
       written?: boolean;
     };
-    prf: {
+    prf?: {
       enabled?: boolean;
       results?: AuthenticationExtensionsPRFValues;
     };
@@ -110,7 +110,7 @@ export interface PasskeyGetResult {
       blob?: Record<string, number>;
       written?: boolean;
     };
-    prf: {
+    prf?: {
       enabled?: boolean;
       results?: AuthenticationExtensionsPRFValues;
     };
