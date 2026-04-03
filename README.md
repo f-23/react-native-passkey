@@ -66,11 +66,13 @@ There are iOS specific steps you need to go through in order to configure Passke
   ```
   webcredentials:XXXXXX
   ```
+
 ### Android
 
 The Android specific configuration is similar to iOS. If you have already set up Digital Asset Links for your application you can skip this step.
 
 #### Associate your app with a domain ([More info](https://developer.android.com/training/sign-in/passkeys#add-support-dal))
+
 - You need to associate a domain with your application. On your webserver set up this route:
 
   ```
@@ -135,12 +137,12 @@ try {
 ```ts
 import { Passkey, PasskeyGetResult } from 'react-native-passkey';
 
-// Retrieve a valid FIDO2 assertion request from your server 
+// Retrieve a valid FIDO2 assertion request from your server
 // The challenge inside the request needs to be a base64URL encoded string
 // There are plenty of libraries which can be used for this (e.g. fido2-lib)
 
 try {
-  // Call the `get` method with the retrieved request in JSON format 
+  // Call the `get` method with the retrieved request in JSON format
   // A native overlay will be displayed
   const result: PasskeyGetResult = await Passkey.get(requestJson);
 
@@ -177,9 +179,9 @@ As of version 3.0 the largeBlob extension will work on iOS 17+ only.
 
 You can use the largeBlob extension to store a small amount of opaque data associated with the stored passkey.
 
-###### Check for largeBlob support
+##### Check for largeBlob support
 
-During registration you can check for largeBlob extension support on the selected authenticator.
+During registration you can check whether the selected authenticator supports the largeBlob extension. Pass `'preferred'` to allow registration to proceed even if the authenticator does not support it, or `'required'` to fail if it does not.
 
 ```ts
 // Request
@@ -187,7 +189,7 @@ During registration you can check for largeBlob extension support on the selecte
   ...
   extensions: {
     largeBlob: {
-      support: true
+      support: 'preferred' | 'required'
     }
   }
 }
@@ -196,14 +198,16 @@ During registration you can check for largeBlob extension support on the selecte
 {
   ...
   clientExtensionResults: {
+    largeBlob: {
       supported: boolean
+    }
   }
 }
 ```
 
-###### Write data
+##### Write data
 
-If the largeBlob extension is supported you can write data to it during the assertion process (this does NOT work during registration).
+If the largeBlob extension is supported you can write data to it during the assertion process. This does **not** work during registration.
 
 ```ts
 // Request
@@ -211,7 +215,7 @@ If the largeBlob extension is supported you can write data to it during the asse
   ...
   extensions: {
     largeBlob: {
-      write: Uint8Array<ArrayBuffer>
+      write: Uint8Array
     }
   }
 }
@@ -219,15 +223,15 @@ If the largeBlob extension is supported you can write data to it during the asse
 // Response
 {
   ...
-  clientExtensionResults: { 
-    largeBlob: { 
-      written: true 
-    } 
+  clientExtensionResults: {
+    largeBlob: {
+      written: true
+    }
   }
 }
 ```
 
-###### Read data
+##### Read data
 
 After writing you can read the data on any following assertion.
 
@@ -245,10 +249,10 @@ After writing you can read the data on any following assertion.
 // Response
 {
   ...
-  clientExtensionResults: { l
-    largeBlob: { 
-      blob: Uint8Array<ArrayBuffer>
-    } 
+  clientExtensionResults: {
+    largeBlob: {
+      blob: number[]  // convert to Uint8Array if needed: new Uint8Array(blob)
+    }
   }
 }
 ```
@@ -266,6 +270,7 @@ You can use the PRF extension to retrieve a secret which allows for various use 
 During registration you can either pass in an empty object (this will check for PRF support) or a salt (with an optional second) to retrieve the secret.
 
 ###### Check for PRF support
+
 ```ts
 // Request
 {
@@ -308,14 +313,14 @@ You can do this either when creating or when asserting the passkey.
 // Response
 {
   ...
-  clientExtensionResults: { 
-    prf: { 
-      enabled: true 
-      results: { 
+  clientExtensionResults: {
+    prf: {
+      enabled: true
+      results: {
           first: 'Be3rf7AK8fwisd9vO13uqaP92XA24jKMSUaEaMclWIk=',
           second: 'jbVCsIGJvtSWv6LRG3fHpUaG/BvT75b8ZLRAuLBNUpk='
       },
-    } 
+    }
   }
 }
 ```

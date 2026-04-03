@@ -13,19 +13,19 @@ export interface PasskeyCreateRequest {
     name: string;
     displayName: string;
   };
-  pubKeyCredParams: Array<{ type: string; alg: number }>;
+  pubKeyCredParams: Array<{ type: 'public-key'; alg: number }>;
   timeout?: number;
   excludeCredentials?: Array<PublicKeyCredentialDescriptor>;
   authenticatorSelection?: {
-    authenticatorAttachment?: string;
+    authenticatorAttachment?: 'platform' | 'cross-platform';
     requireResidentKey?: boolean;
-    residentKey?: string;
-    userVerification?: string;
+    residentKey?: 'discouraged' | 'preferred' | 'required';
+    userVerification?: 'discouraged' | 'preferred' | 'required';
   };
-  attestation?: string;
+  attestation?: 'none' | 'indirect' | 'direct' | 'enterprise';
   extensions?: {
     largeBlob?: {
-      supported?: boolean;
+      support?: 'preferred' | 'required';
       read?: boolean;
       write?: Uint8Array;
     };
@@ -48,14 +48,18 @@ export interface PasskeyCreateResult {
   response: {
     clientDataJSON: string;
     attestationObject: string;
+    authenticatorData?: string;
+    transports?: Array<AuthenticatorTransport>;
+    publicKeyAlgorithm?: number;
+    publicKey?: string;
   };
   clientExtensionResults?: {
     largeBlob?: {
       supported?: boolean;
-      blob?: Uint8Array;
+      blob?: Record<string, number>;
       written?: boolean;
     };
-    prf: {
+    prf?: {
       enabled?: boolean;
       results?: AuthenticationExtensionsPRFValues;
     };
@@ -71,8 +75,12 @@ export interface PasskeyGetRequest {
   rpId: string;
   timeout?: number;
   allowCredentials?: Array<PublicKeyCredentialDescriptor>;
-  userVerification?: string;
+  userVerification?: 'discouraged' | 'preferred' | 'required';
   extensions?: {
+    largeBlob?: {
+      read?: boolean;
+      write?: Uint8Array;
+    };
     prf?: {
       eval?: AuthenticationExtensionsPRFValues;
       evalByCredential?: [string: AuthenticationExtensionsPRFValues];
@@ -86,22 +94,23 @@ export interface PasskeyGetRequest {
  */
 export interface PasskeyGetResult {
   id: string;
-  rawId: string;
+  rawId?: string;
   type?: string;
   authenticatorAttachment?: string;
   response: {
     authenticatorData: string;
     clientDataJSON: string;
     signature: string;
-    userHandle: string;
+    userHandle?: string;
+    attestationObject?: string;
   };
   clientExtensionResults?: {
     largeBlob?: {
       supported?: boolean;
-      blob?: Uint8Array;
+      blob?: Record<string, number>;
       written?: boolean;
     };
-    prf: {
+    prf?: {
       enabled?: boolean;
       results?: AuthenticationExtensionsPRFValues;
     };
@@ -110,12 +119,12 @@ export interface PasskeyGetResult {
 
 // https://www.w3.org/TR/webauthn-3/#dictionary-credential-descriptor
 export interface PublicKeyCredentialDescriptor {
-  type: string;
+  type: 'public-key';
   id: string;
   transports?: Array<AuthenticatorTransport>;
 }
 
-enum AuthenticatorTransport {
+export enum AuthenticatorTransport {
   usb = 'usb',
   nfc = 'nfc',
   ble = 'ble',
@@ -127,7 +136,7 @@ enum AuthenticatorTransport {
 /**
  * https://www.w3.org/TR/webauthn-3/#prf-extension
  */
-interface AuthenticationExtensionsPRFValues {
+export interface AuthenticationExtensionsPRFValues {
   first: Uint8Array;
   second?: Uint8Array;
 }
