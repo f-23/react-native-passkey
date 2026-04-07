@@ -36,10 +36,10 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       }
       
       // Convert userId to Data
-      guard let userId: Data = requestJSON.user.id.data(using: .utf8) else {
-        handleError(RNPasskeyError(type: .invalidUser));
-        return;
-      }
+      guard let userId: Data = Data(base64URLEncoded: requestJSON.user.id) else {
+         handleError(RNPasskeyError(type: .invalidUser));
+         return;
+       }
       
       // Create requests
       let platformKeyRequest: ASAuthorizationRequest = try self.configureCreatePlatformRequest(challenge: challenge, userId: userId, request: requestJSON);
