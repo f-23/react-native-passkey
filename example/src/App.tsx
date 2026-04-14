@@ -1,6 +1,13 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Button, TextInput, Alert } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Button,
+  TextInput,
+  Alert,
+  Platform,
+} from 'react-native';
 import { Passkey } from 'react-native-passkey';
 
 const url = 'https://XYZ.ngrok-free.app'; // REPLACE with your domain (e.g. ngrok)
@@ -35,7 +42,7 @@ export default function App() {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...result, platform: 'ios' }),
+        body: JSON.stringify({ ...result, platform: Platform.OS }),
       });
       const verifyResponseJson = await verifyResponse.json();
 
@@ -72,7 +79,7 @@ export default function App() {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...result, platform: 'ios' }),
+        body: JSON.stringify({ ...result, platform: Platform.OS }),
       });
       const verifyResponseJson = await verifyResponse.json();
 
