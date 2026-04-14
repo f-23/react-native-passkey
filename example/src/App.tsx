@@ -1,6 +1,13 @@
 import * as React from 'react';
 
-import { StyleSheet, View, Button, TextInput, Alert } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Button,
+  TextInput,
+  Alert,
+  Platform,
+} from 'react-native';
 import { Passkey } from 'react-native-passkey';
 
 const url = 'https://XYZ.ngrok-free.app'; // REPLACE with your domain (e.g. ngrok)
@@ -14,7 +21,7 @@ export default function App() {
       const response = await fetch(`${url}/auth/new`, {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email }),
@@ -32,10 +39,10 @@ export default function App() {
       const verifyResponse = await fetch(`${url}/auth/new/verify`, {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...result, platform: 'ios' }),
+        body: JSON.stringify({ ...result, platform: Platform.OS }),
       });
       const verifyResponseJson = await verifyResponse.json();
 
@@ -51,7 +58,7 @@ export default function App() {
       const response = await fetch(`${url}/auth`, {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email }),
@@ -69,10 +76,10 @@ export default function App() {
       const verifyResponse = await fetch(`${url}/auth/verify`, {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ...result, platform: 'ios' }),
+        body: JSON.stringify({ ...result, platform: Platform.OS }),
       });
       const verifyResponseJson = await verifyResponse.json();
 
