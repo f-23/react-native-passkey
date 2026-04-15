@@ -21,7 +21,7 @@ export default function App() {
       const response = await fetch(`${url}/auth/new`, {
         method: 'POST',
         headers: {
-          Accept: 'application/json',
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email }),
@@ -39,7 +39,7 @@ export default function App() {
       const verifyResponse = await fetch(`${url}/auth/new/verify`, {
         method: 'POST',
         headers: {
-          Accept: 'application/json',
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ ...result, platform: Platform.OS }),
@@ -58,7 +58,7 @@ export default function App() {
       const response = await fetch(`${url}/auth`, {
         method: 'POST',
         headers: {
-          Accept: 'application/json',
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email }),
@@ -76,7 +76,7 @@ export default function App() {
       const verifyResponse = await fetch(`${url}/auth/verify`, {
         method: 'POST',
         headers: {
-          Accept: 'application/json',
+          'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ ...result, platform: Platform.OS }),
