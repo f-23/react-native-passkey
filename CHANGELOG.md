@@ -1,5 +1,15 @@
 
 
+## [3.3.3](https://github.com/f-23/react-native-passkey/compare/v3.3.2...v3.3.3) (2026-04-07)
+
+
+### Bug Fixes
+
+* align TypeScript types with native iOS/Android implementations ([5cb2bb0](https://github.com/f-23/react-native-passkey/commit/5cb2bb09235c579aff875288a2bcaa64c86f6134))
+* optional prf ([e1cb283](https://github.com/f-23/react-native-passkey/commit/e1cb28345a5ea6d4fb84b8e7735ae2d7fe60e248))
+* return largeBlob.blob as a plain array instead of a string-keyed dict ([ba1ff44](https://github.com/f-23/react-native-passkey/commit/ba1ff444ca8ef8aca6d80e50ffbd39a0b0f8ed77))
+* undo swift changes ([52d6c7d](https://github.com/f-23/react-native-passkey/commit/52d6c7d0efe0ddaff8ed107442bc38302b6a4fa0))
+
 ## [3.3.2](https://github.com/f-23/react-native-passkey/compare/v3.3.1...v3.3.2) (2025-11-17)
 
 ## [3.3.1](https://github.com/f-23/react-native-passkey/compare/v3.3.0...v3.3.1) (2025-10-02)

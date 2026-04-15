@@ -1,9 +1,13 @@
 // @ts-ignore
 import { Platform, NativeModules } from 'react-native';
 import { Passkey } from '../Passkey';
+import type { PasskeyCreateRequest, PasskeyGetRequest } from '../PasskeyTypes';
 
-import AuthRequest from './testData/AuthRequest.json';
-import RegRequest from './testData/RegRequest.json';
+import AuthRequestJson from './testData/AuthRequest.json';
+import RegRequestJson from './testData/RegRequest.json';
+
+const AuthRequest = AuthRequestJson as PasskeyGetRequest;
+const RegRequest = RegRequestJson as PasskeyCreateRequest;
 
 import AuthAndroidResult from './testData/AuthAndroidResult.json';
 import RegAndroidResult from './testData/RegAndroidResult.json';
