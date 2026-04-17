@@ -21,7 +21,9 @@ enum RNPasskeyErrorType: String {
   case timedOut = "TimedOut"
   
   case HandlerUndefined = "HandlerUndefined"
-  
+
+  case credentialAlreadyExists = "CredentialAlreadyExists"
+
   case unknown = "UnknownError"
   
 }

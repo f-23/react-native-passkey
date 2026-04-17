@@ -54,6 +54,11 @@ export const TimeoutError: PasskeyError = {
   message: 'The operation timed out.',
 };
 
+export const CredentialAlreadyExistsError: PasskeyError = {
+  error: 'CredentialAlreadyExists',
+  message: 'A passkey for this account already exists on this device.',
+};
+
 export const NativeError = (
   message = 'An unknown error occurred'
 ): PasskeyError => {
@@ -96,6 +101,9 @@ export function handleNativeError(_error: TNativeError): PasskeyError {
     }
     case 'TimedOut': {
       return TimeoutError;
+    }
+    case 'CredentialAlreadyExists': {
+      return CredentialAlreadyExistsError;
     }
     case 'UnknownError': {
       return UnknownError;

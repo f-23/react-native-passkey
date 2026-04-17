@@ -308,6 +308,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       return RNPasskeyError(type: .timedOut, message: error.localizedDescription);
       case 1:
       return RNPasskeyError(type: .notSupported, message: error.localizedDescription);
+      case 1006:
+      return RNPasskeyError(type: .credentialAlreadyExists, message: error.localizedDescription);
       default:
       return RNPasskeyError(type: .unknown, message: error.localizedDescription);
     }
