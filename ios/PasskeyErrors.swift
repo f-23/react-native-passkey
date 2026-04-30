@@ -19,9 +19,13 @@ enum RNPasskeyErrorType: String {
   case badConfiguration = "BadConfiguration"
   
   case timedOut = "TimedOut"
-  
+
   case HandlerUndefined = "HandlerUndefined"
-  
+
+  case noCredentials = "NoCredentials"
+
+  case excludedCredential = "ExcludedCredential"
+
   case unknown = "UnknownError"
-  
+
 }

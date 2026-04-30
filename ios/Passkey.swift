@@ -64,8 +64,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
   /**
    Main get entrypoint
    */
-  @objc(get:withForcePlatformKey:withForceSecurityKey:withResolver:withRejecter:)
-  func get(_ request: String, forcePlatformKey: Bool, forceSecurityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+  @objc(get:withForcePlatformKey:withForceSecurityKey:withPreferImmediatelyAvailable:withResolver:withRejecter:)
+  func get(_ request: String, forcePlatformKey: Bool, forceSecurityKey: Bool, preferImmediatelyAvailable: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
     do {
       passkeyHandler = RNPasskeyHandler(resolve, reject);
       
@@ -91,8 +91,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       self.passkeyDelegate = passkeyDelegate;
 
       // Perform the authorization
-      passkeyDelegate.performAuthForController(controller: authController);
-      
+      passkeyDelegate.performAuthForController(controller: authController, preferImmediatelyAvailable: preferImmediatelyAvailable);
+
     } catch let error as NSError {
       reject(error.debugDescription, error.debugDescription, nil);
     }
@@ -302,6 +302,10 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       return RNPasskeyError(type: .cancelled, message: error.localizedDescription);
       case 1004:
       return RNPasskeyError(type: .requestFailed, message: error.localizedDescription);
+      case 1005:
+      return RNPasskeyError(type: .noCredentials, message: error.localizedDescription);
+      case 1006:
+      return RNPasskeyError(type: .excludedCredential, message: error.localizedDescription);
       case 4004:
       return RNPasskeyError(type: .badConfiguration, message: error.localizedDescription);
       case 31:

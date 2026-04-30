@@ -44,6 +44,11 @@ export const NoCredentialsError: PasskeyError = {
   message: 'No viable credential is available for the user.',
 };
 
+export const ExcludedCredentialError: PasskeyError = {
+  error: 'ExcludedCredential',
+  message: 'A passkey already exists for this account on this device.',
+};
+
 export const InterruptedError: PasskeyError = {
   error: 'Interrupted',
   message: 'The operation was interrupted and may be retried.',
@@ -93,6 +98,9 @@ export function handleNativeError(_error: TNativeError): PasskeyError {
     }
     case 'NoCredentials': {
       return NoCredentialsError;
+    }
+    case 'ExcludedCredential': {
+      return ExcludedCredentialError;
     }
     case 'TimedOut': {
       return TimeoutError;

@@ -41,4 +41,18 @@ describe('Test Passkey Module', () => {
     await Passkey.get(AuthRequest);
     expect(authSpy).toHaveBeenCalled();
   });
+
+  test('should call native auth method with preferImmediatelyAvailable for getImmediate', async () => {
+    const authSpy = jest
+      .spyOn(NativeModules.Passkey, 'get')
+      .mockResolvedValue(JSON.stringify(AuthAndroidResult));
+
+    await Passkey.getImmediate(AuthRequest);
+    expect(authSpy).toHaveBeenCalledWith(
+      JSON.stringify(AuthRequest),
+      true,
+      false,
+      true
+    );
+  });
 });
