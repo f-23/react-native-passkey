@@ -10,7 +10,7 @@ import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.exceptions.*
-import androidx.credentials.exceptions.domerrors.InvalidStateError
+import androidx.credentials.exceptions.domerrors.*
 import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException
 import androidx.credentials.exceptions.publickeycredential.GetPublicKeyCredentialDomException
 
@@ -32,10 +32,14 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
 
     mainScope.launch {
       try {
-        val result = reactApplicationContext.currentActivity?.let { credentialManager.createCredential(it, createPublicKeyCredentialRequest) }
+        val activity = reactApplicationContext.currentActivity
+          ?: run { promise.reject("RequestFailed", "No active Activity"); return@launch }
+
+        val result = credentialManager.createCredential(activity, createPublicKeyCredentialRequest)
 
         val response =
-          result?.data?.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON")
+          result.data.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON")
+            ?: run { promise.reject("UnknownError", "Empty credential response"); return@launch }
         promise.resolve(response)
       } catch (e: CreateCredentialException) {
         val errorCode = handleRegistrationException(e)
@@ -48,14 +52,7 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     e.printStackTrace()
     when (e) {
       is CreatePublicKeyCredentialDomException -> {
-        val msg = e.errorMessage?.toString().orEmpty()
-        val isExcludedMatch = e.domError is InvalidStateError &&
-          msg.contains("excluded credential", ignoreCase = true)
-
-        if (isExcludedMatch) {
-          return "CredentialAlreadyExists"
-        }
-        return msg
+        return mapDomError(e.domError)
       }
       is CreateCredentialCancellationException -> {
         return "UserCancelled"
@@ -79,18 +76,24 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
   }
 
   @ReactMethod
-  fun get(requestJson: String, forcePlatformKey: Boolean, forceSecurityKey: Boolean, promise: Promise) {
+  fun get(requestJson: String, forcePlatformKey: Boolean, forceSecurityKey: Boolean, preferImmediatelyAvailable: Boolean, promise: Promise) {
       val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
       val getCredentialRequest =
-        GetCredentialRequest(listOf(GetPublicKeyCredentialOption(requestJson)))
+        GetCredentialRequest(
+          listOf(GetPublicKeyCredentialOption(requestJson)),
+          preferImmediatelyAvailableCredentials = preferImmediatelyAvailable
+        )
 
       mainScope.launch {
         try {
-          val result =
-            reactApplicationContext.currentActivity?.let { credentialManager.getCredential(it, getCredentialRequest) }
+          val activity = reactApplicationContext.currentActivity
+            ?: run { promise.reject("RequestFailed", "No active Activity"); return@launch }
+
+          val result = credentialManager.getCredential(activity, getCredentialRequest)
 
           val response =
-            result?.credential?.data?.getString("androidx.credentials.BUNDLE_KEY_AUTHENTICATION_RESPONSE_JSON")
+            result.credential.data.getString("androidx.credentials.BUNDLE_KEY_AUTHENTICATION_RESPONSE_JSON")
+              ?: run { promise.reject("UnknownError", "Empty credential response"); return@launch }
           promise.resolve(response)
         } catch (e: GetCredentialException) {
           val errorCode = handleAuthenticationException(e)
@@ -103,7 +106,7 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     e.printStackTrace()
     when (e) {
       is GetPublicKeyCredentialDomException -> {
-        return e.errorMessage.toString()
+        return mapDomError(e.domError)
       }
       is GetCredentialCancellationException -> {
         return "UserCancelled"
@@ -126,6 +129,20 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       else -> {
         return e.errorMessage.toString()
       }
+    }
+  }
+
+  private fun mapDomError(domError: DomError): String {
+    return when (domError) {
+      is InvalidStateError -> "CredentialAlreadyExists"
+      is SecurityError -> "RequestFailed"
+      is ConstraintError -> "BadConfiguration"
+      is NotAllowedError -> "RequestFailed"
+      is TimeoutError -> "TimedOut"
+      is AbortError -> "UserCancelled"
+      is DataError -> "RequestFailed"
+      is NotSupportedError -> "NotSupported"
+      else -> "UnknownError"
     }
   }
 }

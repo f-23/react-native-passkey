@@ -153,6 +153,58 @@ try {
 }
 ```
 
+#### Silent / Immediate Authentication
+
+Use `Passkey.getImmediate()` to authenticate **only** when a credential is
+already available on the device, without surfacing the system modal when
+nothing matches. This is useful for opportunistic sign-in checks (e.g. on app
+launch or on a sign-in screen) where you do not want to interrupt the user
+with a credential picker if no passkey exists.
+
+- iOS 16+: uses `ASAuthorizationController.preferImmediatelyAvailableCredentials`
+- Android: uses the `preferImmediatelyAvailableCredentials` flag on
+  `GetCredentialRequest` (Credential Manager)
+- iOS < 16: falls back to a normal `get()` request (no silent behaviour
+  available on the platform)
+
+When no credential is available the call rejects with a `NoCredentials` error
+and no UI is shown. Handle this error to fall back to your usual sign-in flow.
+
+```ts
+import { Passkey } from 'react-native-passkey';
+
+try {
+  const result = await Passkey.getImmediate(requestJson);
+  // Credential available — pass to your server
+} catch (error) {
+  if (error.error === 'NoCredentials') {
+    // No passkey on device — fall back to password / OTP / etc.
+  } else if (error.error === 'UserCancelled') {
+    // User dismissed the sheet
+  } else {
+    // Handle other errors
+  }
+}
+```
+
+#### Error codes
+
+The library normalises native error codes into the following set:
+
+| `error` value        | Meaning                                                                |
+| -------------------- | ---------------------------------------------------------------------- |
+| `NotSupported`       | Passkeys are not supported on this device / OS version                 |
+| `RequestFailed`      | Generic request failure (e.g. transport / network / invalid response)  |
+| `UserCancelled`      | User dismissed the system sheet                                        |
+| `InvalidChallenge`   | The provided challenge could not be decoded                            |
+| `InvalidUserId`      | The provided user id could not be decoded (registration only)          |
+| `BadConfiguration`   | App is not configured correctly (associated domain / asset links)      |
+| `NoCredentials`      | No credential is available — also returned for silent `getImmediate()` |
+| `CredentialAlreadyExists` | A passkey already exists for this account on this device (registration) |
+| `Interrupted`        | The operation was interrupted and may be retried                       |
+| `TimedOut`           | The operation timed out                                                |
+| `UnknownError`       | Unknown / unmapped error                                               |
+
 ### Force Platform or Security Key (iOS-specific)
 
 You can force users to register and authenticate using either a platform key, a security key (like [Yubikey](https://www.yubico.com/)) or allow both using the following methods. This only works on iOS, Android will ignore these instructions.

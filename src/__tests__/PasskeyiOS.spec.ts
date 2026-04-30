@@ -1,6 +1,7 @@
 // @ts-ignore
 import { Platform, NativeModules } from 'react-native';
 import { Passkey } from '../Passkey';
+import { stringifyPasskeyRequest } from '../PasskeyRequest';
 import type { PasskeyCreateRequest, PasskeyGetRequest } from '../PasskeyTypes';
 
 import AuthRequestJson from './testData/AuthRequest.json';
@@ -40,5 +41,19 @@ describe('Test Passkey Module', () => {
 
     await Passkey.get(AuthRequest);
     expect(authSpy).toHaveBeenCalled();
+  });
+
+  test('should call native auth method with preferImmediatelyAvailable for getImmediate', async () => {
+    const authSpy = jest
+      .spyOn(NativeModules.Passkey, 'get')
+      .mockResolvedValue(AuthiOSResult);
+
+    await Passkey.getImmediate(AuthRequest);
+    expect(authSpy).toHaveBeenCalledWith(
+      stringifyPasskeyRequest(AuthRequest, 'ios'),
+      true,
+      false,
+      true
+    );
   });
 });

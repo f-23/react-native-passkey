@@ -128,7 +128,45 @@ export class Passkey {
       const response = await NativePasskey.get(
         stringifyPasskeyRequest(request, Platform.OS),
         false, // forcePlatformKey
-        false // forceSecurityKey
+        false, // forceSecurityKey
+        false // preferImmediatelyAvailable
+      );
+
+      if (typeof response === 'string') {
+        return JSON.parse(response) as PasskeyGetResult;
+      }
+      return response as PasskeyGetResult;
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
+    }
+  }
+
+  /**
+   * Authenticates using an existing Passkey, but only if a credential is
+   * immediately available on the device. On iOS 16+ this uses
+   * `ASAuthorizationController.preferImmediatelyAvailableCredentials` and on
+   * Android the `preferImmediatelyAvailableCredentials` flag of
+   * `GetCredentialRequest`. When no credential is available the request fails
+   * silently (no modal) with a `NoCredentials` error, making this suitable for
+   * silent / opportunistic checks.
+   *
+   * @param request The FIDO2 Assertion Request in JSON format
+   * @returns The FIDO2 Assertion Result in JSON format
+   * @throws
+   */
+  public static async getImmediate(
+    request: PasskeyGetRequest
+  ): Promise<PasskeyGetResult> {
+    if (!Passkey.isSupported()) {
+      throw NotSupportedError;
+    }
+
+    try {
+      const response = await NativePasskey.get(
+        stringifyPasskeyRequest(request, Platform.OS),
+        true, // forcePlatformKey (immediate is platform-only)
+        false, // forceSecurityKey
+        true // preferImmediatelyAvailable
       );
 
       if (typeof response === 'string') {
@@ -160,7 +198,8 @@ export class Passkey {
       const response = await NativePasskey.get(
         stringifyPasskeyRequest(request, Platform.OS),
         true, // forcePlatformKey
-        false // forceSecurityKey
+        false, // forceSecurityKey
+        false // preferImmediatelyAvailable
       );
 
       if (typeof response === 'string') {
@@ -192,7 +231,8 @@ export class Passkey {
       const response = await NativePasskey.get(
         stringifyPasskeyRequest(request, Platform.OS),
         false, // forcePlatformKey
-        true // forceSecurityKey
+        true, // forceSecurityKey
+        false // preferImmediatelyAvailable
       );
 
       if (typeof response === 'string') {
