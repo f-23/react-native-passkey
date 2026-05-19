@@ -10,6 +10,7 @@ import type {
   PasskeyGetRequest,
   PasskeyGetResult,
 } from './PasskeyTypes';
+import { stringifyPasskeyRequest } from './PasskeyRequest';
 import { NativePasskey } from './NativePasskey';
 
 export class Passkey {
@@ -30,7 +31,7 @@ export class Passkey {
 
     try {
       const response = await NativePasskey.create(
-        JSON.stringify(request),
+        stringifyPasskeyRequest(request, Platform.OS),
         false, // forcePlatformKey
         false // forceSecurityKey
       );
@@ -62,7 +63,7 @@ export class Passkey {
 
     try {
       const response = await NativePasskey.create(
-        JSON.stringify(request),
+        stringifyPasskeyRequest(request, Platform.OS),
         true, // forcePlatformKey
         false // forceSecurityKey
       );
@@ -94,7 +95,7 @@ export class Passkey {
 
     try {
       const response = await NativePasskey.create(
-        JSON.stringify(request),
+        stringifyPasskeyRequest(request, Platform.OS),
         false, // forcePlatformKey
         true // forceSecurityKey
       );
@@ -125,7 +126,7 @@ export class Passkey {
 
     try {
       const response = await NativePasskey.get(
-        JSON.stringify(request),
+        stringifyPasskeyRequest(request, Platform.OS),
         false, // forcePlatformKey
         false // forceSecurityKey
       );
@@ -157,7 +158,7 @@ export class Passkey {
 
     try {
       const response = await NativePasskey.get(
-        JSON.stringify(request),
+        stringifyPasskeyRequest(request, Platform.OS),
         true, // forcePlatformKey
         false // forceSecurityKey
       );
@@ -189,7 +190,7 @@ export class Passkey {
 
     try {
       const response = await NativePasskey.get(
-        JSON.stringify(request),
+        stringifyPasskeyRequest(request, Platform.OS),
         false, // forcePlatformKey
         true // forceSecurityKey
       );
