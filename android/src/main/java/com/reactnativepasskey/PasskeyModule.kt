@@ -10,6 +10,7 @@ import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
 import androidx.credentials.exceptions.*
+import androidx.credentials.exceptions.domerrors.InvalidStateError
 import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException
 import androidx.credentials.exceptions.publickeycredential.GetPublicKeyCredentialDomException
 
@@ -47,7 +48,14 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     e.printStackTrace()
     when (e) {
       is CreatePublicKeyCredentialDomException -> {
-        return e.errorMessage.toString()
+        val msg = e.errorMessage?.toString().orEmpty()
+        val isExcludedMatch = e.domError is InvalidStateError &&
+          msg.contains("excluded credential", ignoreCase = true)
+
+        if (isExcludedMatch) {
+          return "CredentialAlreadyExists"
+        }
+        return msg
       }
       is CreateCredentialCancellationException -> {
         return "UserCancelled"
