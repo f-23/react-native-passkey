@@ -2,6 +2,8 @@
  * The FIDO2 Attestation Request
  * https://www.w3.org/TR/webauthn-3/#dictionary-makecredentialoptions
  */
+export type PasskeyBinaryValue = Uint8Array | ArrayBuffer | number[] | string;
+
 export interface PasskeyCreateRequest {
   challenge: string;
   rp: {
@@ -27,11 +29,13 @@ export interface PasskeyCreateRequest {
     largeBlob?: {
       support?: 'preferred' | 'required';
       read?: boolean;
-      write?: Uint8Array;
+      write?: PasskeyBinaryValue;
     };
     prf?: {
       eval?: AuthenticationExtensionsPRFValues;
-      evalByCredential?: [string: AuthenticationExtensionsPRFValues];
+      evalByCredential?:
+        | Record<string, AuthenticationExtensionsPRFValues>
+        | Array<Record<string, AuthenticationExtensionsPRFValues>>;
     };
   };
 }
@@ -79,11 +83,13 @@ export interface PasskeyGetRequest {
   extensions?: {
     largeBlob?: {
       read?: boolean;
-      write?: Uint8Array;
+      write?: PasskeyBinaryValue;
     };
     prf?: {
       eval?: AuthenticationExtensionsPRFValues;
-      evalByCredential?: [string: AuthenticationExtensionsPRFValues];
+      evalByCredential?:
+        | Record<string, AuthenticationExtensionsPRFValues>
+        | Array<Record<string, AuthenticationExtensionsPRFValues>>;
     };
   };
 }
@@ -137,6 +143,6 @@ export enum AuthenticatorTransport {
  * https://www.w3.org/TR/webauthn-3/#prf-extension
  */
 export interface AuthenticationExtensionsPRFValues {
-  first: Uint8Array;
-  second?: Uint8Array;
+  first: PasskeyBinaryValue;
+  second?: PasskeyBinaryValue;
 }

@@ -33,6 +33,45 @@ describe('Test Passkey Module', () => {
     expect(registerSpy).toHaveBeenCalled();
   });
 
+  test('should serialize Android PRF inputs as WebAuthn JSON', async () => {
+    const registerSpy = jest
+      .spyOn(NativeModules.Passkey, 'create')
+      .mockResolvedValue(JSON.stringify(RegAndroidResult));
+
+    await Passkey.create({
+      ...RegRequest,
+      excludeCredentials: [
+        {
+          id: 'wtHzWP5Mav6bQ+CH2241jg==',
+          type: 'public-key',
+        },
+      ],
+      extensions: {
+        prf: {
+          eval: {
+            first: new Uint8Array([
+              118, 50, 79, 56, 70, 82, 83, 95, 51, 78, 70, 118, 111, 104, 111,
+              48, 51, 119, 87, 108, 79, 101, 109, 55, 111, 118, 65, 48, 79, 82,
+              49, 76,
+            ]),
+          },
+        },
+      },
+    });
+
+    const nativeCall =
+      registerSpy.mock.calls[registerSpy.mock.calls.length - 1];
+    expect(nativeCall).toBeDefined();
+
+    const nativeRequest = JSON.parse(nativeCall?.[0] as string);
+    expect(nativeRequest.extensions.prf.eval.first).toBe(
+      'djJPOEZSU18zTkZ2b2hvMDN3V2xPZW03b3ZBME9SMUw'
+    );
+    expect(nativeRequest.excludeCredentials[0].id).toBe(
+      'wtHzWP5Mav6bQ-CH2241jg'
+    );
+  });
+
   test('should call native auth method', async () => {
     const authSpy = jest
       .spyOn(NativeModules.Passkey, 'get')

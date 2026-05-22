@@ -263,6 +263,8 @@ You can find information on the largeBlob extension in the WebAuthn specificatio
 
 As of version 3.3 the PRF extension will work for Android and iOS 18+.
 
+On Android, binary extension inputs are sent to Credential Manager as standard WebAuthn JSON. You can pass PRF salts as a `Uint8Array`, `ArrayBuffer`, `number[]`, or a Base64URL string; the library normalizes them to Base64URL before calling the native Android API. This avoids Android rejecting otherwise valid PRF creation requests with `No create options available`.
+
 ##### Example
 
 You can use the PRF extension to retrieve a secret which allows for various use cases like encryption of user data.
@@ -303,8 +305,8 @@ You can do this either when creating or when asserting the passkey.
   extensions: {
     prf: {
       eval: {
-        first: Uint8Array<ArrayBuffer>
-        second: Uint8Array<ArrayBuffer> // optional
+        first: Uint8Array | ArrayBuffer | number[] | string
+        second: Uint8Array | ArrayBuffer | number[] | string // optional
       }
     }
   }
