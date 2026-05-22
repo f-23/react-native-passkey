@@ -1,5 +1,17 @@
 
 
+# [3.4.0](https://github.com/f-23/react-native-passkey/compare/v3.3.3...v3.4.0) (2026-05-22)
+
+
+### Bug Fixes
+
+* **ios:** base64url-encode userHandle in assertion responses ([2f62d5b](https://github.com/f-23/react-native-passkey/commit/2f62d5b29e8201ec71e91577ffbb0a3f38019319)), closes [#90](https://github.com/f-23/react-native-passkey/issues/90) [#102](https://github.com/f-23/react-native-passkey/issues/102)
+
+
+### Features
+
+* add CredentialAlreadyExists error for matched excludeCredentials ([c45e0c9](https://github.com/f-23/react-native-passkey/commit/c45e0c90b1237e91c12e87ff0e6b602d8b5b3887)), closes [#86](https://github.com/f-23/react-native-passkey/issues/86)
+
 ## [3.3.3](https://github.com/f-23/react-native-passkey/compare/v3.3.2...v3.3.3) (2026-04-07)
 
 
