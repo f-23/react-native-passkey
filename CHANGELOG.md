@@ -1,5 +1,12 @@
 
 
+# [3.5.0](https://github.com/f-23/react-native-passkey/compare/v3.4.0...v3.5.0) (2026-06-12)
+
+
+### Features
+
+* add Passkey.getImmediate for silent credential checks ([e8eb940](https://github.com/f-23/react-native-passkey/commit/e8eb9407affa856d56af7f4ee33749aa94fee4a2)), closes [#91](https://github.com/f-23/react-native-passkey/issues/91)
+
 # [3.4.0](https://github.com/f-23/react-native-passkey/compare/v3.3.3...v3.4.0) (2026-05-22)
 
 
