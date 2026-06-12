@@ -12,6 +12,7 @@ RCT_EXTERN_METHOD(create:(NSString)request
 RCT_EXTERN_METHOD(get:(NSString)request
                   withForcePlatformKey:(BOOL)forcePlatformKey
                   withForceSecurityKey:(BOOL)forceSecurityKey
+                  withPreferImmediatelyAvailable:(BOOL)preferImmediatelyAvailable
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject);
 

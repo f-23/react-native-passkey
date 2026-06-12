@@ -19,10 +19,18 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
   }
   
   // Perform the authorization request for a given ASAuthorizationController instance
-  func performAuthForController(controller: ASAuthorizationController) {
+  func performAuthForController(controller: ASAuthorizationController, preferImmediatelyAvailable: Bool = false) {
     controller.delegate = self;
     controller.presentationContextProvider = self;
-    controller.performRequests();
+    if preferImmediatelyAvailable {
+      if #available(iOS 16.0, *) {
+        controller.performRequests(options: .preferImmediatelyAvailableCredentials);
+      } else {
+        controller.performRequests();
+      }
+    } else {
+      controller.performRequests();
+    }
   }
   
   func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
