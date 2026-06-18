@@ -98,6 +98,82 @@ class Passkey: NSObject, RNPasskeyResultHandler {
     }
   }
   
+  /**
+   WebAuthn Signal API: report a credential the relying party no longer recognizes so the
+   system removes/hides it. `credentialId` is base64url. No-ops below iOS 26 (ASCredentialUpdater
+   is unavailable). Best-effort: resolves once the request is accepted.
+
+   Use when unauthenticated / after a failed sign-in (single credential, no user handle). For the
+   authenticated full-set reconcile, use `signalAllAcceptedCredentials` instead.
+   */
+  @objc(signalUnknownCredential:withCredentialId:withResolver:withRejecter:)
+  func signalUnknownCredential(_ rpId: String, credentialId: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    guard #available(iOS 26.0, *) else {
+      resolve(nil);
+      return;
+    }
+    guard let credentialIDData: Data = Data(base64URLEncoded: credentialId) else {
+      reject("InvalidCredentialId", "credentialId is not valid base64url", nil);
+      return;
+    }
+    Task {
+      do {
+        try await ASCredentialUpdater().reportUnknownPublicKeyCredential(
+          relyingPartyIdentifier: rpId,
+          credentialID: credentialIDData
+        );
+        resolve(nil);
+      } catch {
+        reject("SignalFailed", error.localizedDescription, error);
+      }
+    }
+  }
+
+  /**
+   WebAuthn Signal API: report the complete set of credential ids the relying party still accepts
+   for (rpId, userId); the system removes any stored credentials not in the list. `userId` is
+   base64url and `allAcceptedCredentialIdsJson` is a JSON-encoded array of base64url ids. No-ops
+   below iOS 26.
+
+   Use when authenticated (needs the user handle + full accepted set); authoritatively prunes.
+   For a single credential when unauthenticated, use `signalUnknownCredential` instead.
+   */
+  @objc(signalAllAcceptedCredentials:withUserId:withAllAcceptedCredentialIdsJson:withResolver:withRejecter:)
+  func signalAllAcceptedCredentials(_ rpId: String, userId: String, allAcceptedCredentialIdsJson: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    guard #available(iOS 26.0, *) else {
+      resolve(nil);
+      return;
+    }
+    guard let userHandle: Data = Data(base64URLEncoded: userId) else {
+      reject("InvalidUserId", "userId is not valid base64url", nil);
+      return;
+    }
+    guard let idStrings = try? JSONDecoder().decode([String].self, from: Data(allAcceptedCredentialIdsJson.utf8)) else {
+      reject("InvalidCredentialIds", "allAcceptedCredentialIds is not a valid JSON array", nil);
+      return;
+    }
+    var acceptedCredentialIDs: [Data] = [];
+    for id in idStrings {
+      guard let data: Data = Data(base64URLEncoded: id) else {
+        reject("InvalidCredentialId", "an accepted credential id is not valid base64url", nil);
+        return;
+      }
+      acceptedCredentialIDs.append(data);
+    }
+    Task {
+      do {
+        try await ASCredentialUpdater().reportAllAcceptedPublicKeyCredentials(
+          relyingPartyIdentifier: rpId,
+          userHandle: userHandle,
+          acceptedCredentialIDs: acceptedCredentialIDs
+        );
+        resolve(nil);
+      } catch {
+        reject("SignalFailed", error.localizedDescription, error);
+      }
+    }
+  }
+
   func onSuccess(_ data: PublicKeyCredentialJSON) {
     guard let handler = passkeyHandler else {
       print("passkeyHandler was nil");

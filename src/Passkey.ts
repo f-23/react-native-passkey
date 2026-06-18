@@ -9,6 +9,8 @@ import type {
   PasskeyCreateResult,
   PasskeyGetRequest,
   PasskeyGetResult,
+  PasskeySignalUnknownCredentialRequest,
+  PasskeySignalAllAcceptedCredentialsRequest,
 } from './PasskeyTypes';
 import { stringifyPasskeyRequest } from './PasskeyRequest';
 import { NativePasskey } from './NativePasskey';
@@ -242,6 +244,60 @@ export class Passkey {
     } catch (error: unknown) {
       throw handleNativeError(error as TNativeError);
     }
+  }
+
+  /**
+   * Reports a credential the relying party no longer recognizes so OS credential
+   * managers can remove / hide it (WebAuthn Signal API).
+   *
+   * Use this when **unauthenticated** (e.g. after a failed sign-in): it takes a
+   * single credential id and no user handle, so it reveals nothing about the user.
+   * For the authenticated full-set reconcile, use `signalAllAcceptedCredentials`
+   * instead.
+   *
+   * This is best-effort and resolves once the request is accepted. It no-ops on OS
+   * versions without Signal API support (iOS < 26).
+   *
+   * @param request The relying party id and the base64URL encoded credential id
+   * @returns A Promise that resolves once the signal has been delivered
+   * @throws
+   */
+  public static async signalUnknownCredential(
+    request: PasskeySignalUnknownCredentialRequest
+  ): Promise<void> {
+    return NativePasskey.signalUnknownCredential(
+      request.rpId,
+      request.credentialId
+    );
+  }
+
+  /**
+   * Reports the complete set of credential ids the relying party still accepts for
+   * a given user (WebAuthn Signal API). OS credential managers remove / hide any
+   * stored credentials not in the list (reversible — re-add an id to restore; an
+   * empty list hides all).
+   *
+   * Use this when **authenticated** (after login, or after adding / deleting a
+   * passkey): it needs the user handle and the full accepted set, so it
+   * authoritatively prunes. For a single credential when unauthenticated, use
+   * `signalUnknownCredential` instead.
+   *
+   * This is best-effort and resolves once the request is accepted. It no-ops on OS
+   * versions without Signal API support (iOS < 26).
+   *
+   * @param request The relying party id, the base64URL encoded user handle and the
+   * base64URL encoded credential ids still accepted by the server
+   * @returns A Promise that resolves once the signal has been delivered
+   * @throws
+   */
+  public static async signalAllAcceptedCredentials(
+    request: PasskeySignalAllAcceptedCredentialsRequest
+  ): Promise<void> {
+    return NativePasskey.signalAllAcceptedCredentials(
+      request.rpId,
+      request.userId,
+      JSON.stringify(request.allAcceptedCredentialIds)
+    );
   }
 
   /**

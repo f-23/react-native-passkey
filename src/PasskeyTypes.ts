@@ -123,6 +123,29 @@ export interface PasskeyGetResult {
   };
 }
 
+/**
+ * The Signal API request reporting a credential the relying party no longer recognizes
+ * https://www.w3.org/TR/webauthn-3/#sctn-signalUnknownCredential
+ */
+export interface PasskeySignalUnknownCredentialRequest {
+  rpId: string;
+  // base64url-encoded credential id
+  credentialId: string;
+}
+
+/**
+ * The Signal API request reporting the complete set of credential ids the relying party
+ * still accepts for a given user
+ * https://www.w3.org/TR/webauthn-3/#sctn-signalAllAcceptedCredentials
+ */
+export interface PasskeySignalAllAcceptedCredentialsRequest {
+  rpId: string;
+  // base64url-encoded WebAuthn user handle
+  userId: string;
+  // array of base64url-encoded credential ids
+  allAcceptedCredentialIds: string[];
+}
+
 // https://www.w3.org/TR/webauthn-3/#dictionary-credential-descriptor
 export interface PublicKeyCredentialDescriptor {
   type: 'public-key';

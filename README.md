@@ -187,6 +187,57 @@ try {
 }
 ```
 
+#### Signal API
+
+The [WebAuthn Signal API](https://w3c.github.io/webauthn/#sctn-signal-methods)
+lets your app keep OS credential managers (e.g. iCloud Keychain, Google Password
+Manager) in sync with your server. When the server has revoked or deleted a
+passkey, signalling it removes / hides the stale credential so it no longer shows
+up in the system sheet.
+
+Both methods are **best-effort**: they resolve once the request is accepted and
+**no-op** on OS versions without Signal API support (iOS < 26). All credential ids
+and the user handle are passed as Base64URL encoded strings.
+
+- iOS 26+: uses `ASCredentialUpdater`
+- Android: uses `CredentialManager.signalCredentialState` (requires
+  `androidx.credentials` 1.6.0+, bundled with the library)
+
+##### `Passkey.signalUnknownCredential()`
+
+Reports a single credential the relying party no longer recognizes. Use this when
+**unauthenticated** (e.g. after a failed sign-in): it takes a single credential id
+and no user handle, so it reveals nothing about the user.
+
+```ts
+import { Passkey } from 'react-native-passkey';
+
+// e.g. after the server rejects the credential used to authenticate
+await Passkey.signalUnknownCredential({
+  rpId: 'example.com',
+  credentialId, // Base64URL encoded credential id
+});
+```
+
+##### `Passkey.signalAllAcceptedCredentials()`
+
+Reports the complete set of credential ids the relying party still accepts for a
+user. OS credential managers remove / hide any stored credentials **not** in the
+list (reversible — re-signal an id to restore it; an empty list hides all). Use
+this when **authenticated** (after login, or after adding / deleting a passkey):
+it needs the user handle and the full accepted set, so it authoritatively prunes.
+
+```ts
+import { Passkey } from 'react-native-passkey';
+
+// e.g. after deleting a passkey, signal the remaining accepted credentials
+await Passkey.signalAllAcceptedCredentials({
+  rpId: 'example.com',
+  userId, // Base64URL encoded WebAuthn user handle
+  allAcceptedCredentialIds, // string[] of Base64URL encoded credential ids
+});
+```
+
 #### Error codes
 
 The library normalises native error codes into the following set:

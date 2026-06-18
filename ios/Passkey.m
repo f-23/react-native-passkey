@@ -16,6 +16,17 @@ RCT_EXTERN_METHOD(get:(NSString)request
                   withResolver:(RCTPromiseResolveBlock)resolve
                   withRejecter:(RCTPromiseRejectBlock)reject);
 
+RCT_EXTERN_METHOD(signalUnknownCredential:(NSString)rpId
+                  withCredentialId:(NSString)credentialId
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject);
+
+RCT_EXTERN_METHOD(signalAllAcceptedCredentials:(NSString)rpId
+                  withUserId:(NSString)userId
+                  withAllAcceptedCredentialIdsJson:(NSString)allAcceptedCredentialIdsJson
+                  withResolver:(RCTPromiseResolveBlock)resolve
+                  withRejecter:(RCTPromiseRejectBlock)reject);
+
 + (BOOL)requiresMainQueueSetup
 {
   return NO;
