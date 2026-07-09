@@ -94,7 +94,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       passkeyDelegate.performAuthForController(controller: authController, preferImmediatelyAvailable: preferImmediatelyAvailable);
 
     } catch let error as NSError {
-      reject(error.debugDescription, error.debugDescription, nil);
+      handleError(handleErrorCode(error: error));
     }
   }
   

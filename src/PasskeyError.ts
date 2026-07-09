@@ -70,6 +70,7 @@ export const NativeError = (
 
 export interface TNativeError {
   code?: string;
+  message?: string;
 }
 
 export function handleNativeError(_error: TNativeError): PasskeyError {
@@ -77,7 +78,25 @@ export function handleNativeError(_error: TNativeError): PasskeyError {
     return UnknownError;
   }
 
-  switch (_error.code) {
+  const mappedError = mapNativeErrorCode(_error.code, _error);
+
+  // Preserve the native error message (e.g. "RP ID cannot be validated.")
+  // when it carries more detail than the coarse error code, so callers can
+  // diagnose configuration problems instead of only seeing the generic
+  // fallback message for the mapped code.
+  if (
+    typeof _error.message === 'string' &&
+    _error.message.length > 0 &&
+    _error.message !== _error.code
+  ) {
+    return { ...mappedError, message: _error.message };
+  }
+
+  return mappedError;
+}
+
+function mapNativeErrorCode(code: string, _error: TNativeError): PasskeyError {
+  switch (code) {
     case 'NotSupported': {
       return NotSupportedError;
     }
