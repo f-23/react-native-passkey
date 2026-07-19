@@ -59,6 +59,12 @@ export const CredentialAlreadyExistsError: PasskeyError = {
   message: 'A passkey for this account already exists on this device.',
 };
 
+export const NoCreateOptionError: PasskeyError = {
+  error: 'NoCreateOption',
+  message:
+    'No credential provider is available to create a passkey on this device.',
+};
+
 export const NativeError = (
   message = 'An unknown error occurred'
 ): PasskeyError => {
@@ -104,6 +110,9 @@ export function handleNativeError(_error: TNativeError): PasskeyError {
     }
     case 'CredentialAlreadyExists': {
       return CredentialAlreadyExistsError;
+    }
+    case 'NoCreateOption': {
+      return NoCreateOptionError;
     }
     case 'UnknownError': {
       return UnknownError;

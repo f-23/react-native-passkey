@@ -201,6 +201,7 @@ The library normalises native error codes into the following set:
 | `BadConfiguration`   | App is not configured correctly (associated domain / asset links)      |
 | `NoCredentials`      | No credential is available — also returned for silent `getImmediate()` |
 | `CredentialAlreadyExists` | A passkey already exists for this account on this device (registration) |
+| `NoCreateOption`     | No credential provider can create a passkey (Android; e.g. no Google account signed in) |
 | `Interrupted`        | The operation was interrupted and may be retried                       |
 | `TimedOut`           | The operation timed out                                                |
 | `UnknownError`       | Unknown / unmapped error                                               |

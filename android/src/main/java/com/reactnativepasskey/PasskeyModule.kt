@@ -69,8 +69,17 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       is CreateCredentialUnsupportedException -> {
         return "NotSupported"
       }
+      is CreateCredentialNoCreateOptionException -> {
+        // No credential provider offered to create a passkey — e.g. Google Password Manager
+        // with no Google account signed in, or no provider installed at all. Without a stable
+        // code here the JS side only receives the localized errorMessage, which it cannot
+        // branch on to offer a password fallback.
+        return "NoCreateOption"
+      }
       else -> {
-        return e.errorMessage.toString()
+        // Fall back to the androidx type constant rather than the human-readable message:
+        // `type` is a stable identifier, `errorMessage` is display text that may change.
+        return e.type
       }
     }
   }
@@ -127,7 +136,8 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
         return "NoCredentials"
       }
       else -> {
-        return e.errorMessage.toString()
+        // Stable identifier over display text, same rationale as the create path.
+        return e.type
       }
     }
   }
