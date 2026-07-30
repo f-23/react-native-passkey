@@ -9,6 +9,8 @@ import androidx.credentials.CredentialManager
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
+import androidx.credentials.SignalAllAcceptedCredentialIdsRequest
+import androidx.credentials.SignalUnknownCredentialRequest
 import androidx.credentials.exceptions.*
 import androidx.credentials.exceptions.domerrors.*
 import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException
@@ -17,6 +19,9 @@ import androidx.credentials.exceptions.publickeycredential.GetPublicKeyCredentia
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+
+import org.json.JSONArray
+import org.json.JSONObject
 
 class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
   private val mainScope = CoroutineScope(Dispatchers.Default)
@@ -100,6 +105,65 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
           promise.reject(errorCode, errorCode)
         }
       }
+  }
+
+  /**
+   * WebAuthn Signal API: tells OS credential managers a credential the relying party no longer
+   * recognizes should be removed/hidden. `credentialId` is a base64url string; the platform
+   * decodes it. Best-effort — resolves once the request is accepted.
+   *
+   * Use when unauthenticated / after a failed sign-in (single credential, no user handle). For the
+   * authenticated full-set reconcile, use [signalAllAcceptedCredentials] instead.
+   */
+  @ReactMethod
+  fun signalUnknownCredential(rpId: String, credentialId: String, promise: Promise) {
+    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
+    val requestJson = JSONObject().apply {
+      put("rpId", rpId)
+      put("credentialId", credentialId)
+    }.toString()
+
+    mainScope.launch {
+      try {
+        credentialManager.signalCredentialState(SignalUnknownCredentialRequest(requestJson))
+        promise.resolve(null)
+      } catch (e: Exception) {
+        promise.reject("SignalFailed", e.message ?: "signalUnknownCredential failed", e)
+      }
+    }
+  }
+
+  /**
+   * WebAuthn Signal API: reports the complete set of credential ids the relying party still
+   * accepts for (rpId, userId); the credential manager removes any stored credentials not in the
+   * list. `userId` and the ids are base64url strings. `allAcceptedCredentialIdsJson` is a
+   * JSON-encoded array of base64url credential ids.
+   *
+   * Use when authenticated (needs the user handle + full accepted set); authoritatively prunes.
+   * For a single credential when unauthenticated, use [signalUnknownCredential] instead.
+   */
+  @ReactMethod
+  fun signalAllAcceptedCredentials(
+    rpId: String,
+    userId: String,
+    allAcceptedCredentialIdsJson: String,
+    promise: Promise
+  ) {
+    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
+    val requestJson = JSONObject().apply {
+      put("rpId", rpId)
+      put("userId", userId)
+      put("allAcceptedCredentialIds", JSONArray(allAcceptedCredentialIdsJson))
+    }.toString()
+
+    mainScope.launch {
+      try {
+        credentialManager.signalCredentialState(SignalAllAcceptedCredentialIdsRequest(requestJson))
+        promise.resolve(null)
+      } catch (e: Exception) {
+        promise.reject("SignalFailed", e.message ?: "signalAllAcceptedCredentials failed", e)
+      }
+    }
   }
 
   private fun handleAuthenticationException(e: GetCredentialException): String {

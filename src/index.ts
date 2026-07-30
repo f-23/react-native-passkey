@@ -5,6 +5,8 @@ import type {
   PasskeyCreateResult,
   PasskeyGetRequest,
   PasskeyGetResult,
+  PasskeySignalUnknownCredentialRequest,
+  PasskeySignalAllAcceptedCredentialsRequest,
 } from './PasskeyTypes';
 
 export {
@@ -14,4 +16,6 @@ export {
   PasskeyCreateResult,
   PasskeyGetRequest,
   PasskeyGetResult,
+  PasskeySignalUnknownCredentialRequest,
+  PasskeySignalAllAcceptedCredentialsRequest,
 };

@@ -95,4 +95,33 @@ describe('Test Passkey Module', () => {
       true
     );
   });
+
+  test('should call native signalUnknownCredential method', async () => {
+    const signalSpy = jest
+      .spyOn(NativeModules.Passkey, 'signalUnknownCredential')
+      .mockResolvedValue(undefined);
+
+    await Passkey.signalUnknownCredential({
+      rpId: 'example.com',
+      credentialId: 'Y3JlZA',
+    });
+    expect(signalSpy).toHaveBeenCalledWith('example.com', 'Y3JlZA');
+  });
+
+  test('should call native signalAllAcceptedCredentials method with stringified ids', async () => {
+    const signalSpy = jest
+      .spyOn(NativeModules.Passkey, 'signalAllAcceptedCredentials')
+      .mockResolvedValue(undefined);
+
+    await Passkey.signalAllAcceptedCredentials({
+      rpId: 'example.com',
+      userId: 'dXNlcg',
+      allAcceptedCredentialIds: ['a', 'b'],
+    });
+    expect(signalSpy).toHaveBeenCalledWith(
+      'example.com',
+      'dXNlcg',
+      JSON.stringify(['a', 'b'])
+    );
+  });
 });
