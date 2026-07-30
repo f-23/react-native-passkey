@@ -48,7 +48,9 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
         promise.resolve(response)
       } catch (e: CreateCredentialException) {
         val errorCode = handleRegistrationException(e)
-        promise.reject(errorCode, errorCode)
+        promise.reject(errorCode, e.errorMessage?.toString() ?: errorCode)
+      } catch (e: Throwable) {
+        promise.reject("UnknownError", e.message ?: "UnknownError")
       }
     }
   }
@@ -111,7 +113,9 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
           promise.resolve(response)
         } catch (e: GetCredentialException) {
           val errorCode = handleAuthenticationException(e)
-          promise.reject(errorCode, errorCode)
+          promise.reject(errorCode, e.errorMessage?.toString() ?: errorCode)
+        } catch (e: Throwable) {
+          promise.reject("UnknownError", e.message ?: "UnknownError")
         }
       }
   }
