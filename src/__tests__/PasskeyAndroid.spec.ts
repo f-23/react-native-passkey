@@ -73,6 +73,21 @@ describe('Test Passkey Module', () => {
     );
   });
 
+  test('should surface NoCreateOption when no provider can create a passkey', async () => {
+    // Credential Manager raises CreateCredentialNoCreateOptionException when no credential
+    // provider offers to create one — most commonly Google Password Manager with no Google
+    // account signed in. Without an explicit mapping this fell through to `NativeError`,
+    // whose `error` is the generic 'Native error', so callers could not detect the state to
+    // fall back to a password flow.
+    jest
+      .spyOn(NativeModules.Passkey, 'create')
+      .mockRejectedValue({ code: 'NoCreateOption' });
+
+    await expect(Passkey.create(RegRequest)).rejects.toMatchObject({
+      error: 'NoCreateOption',
+    });
+  });
+
   test('should call native auth method', async () => {
     const authSpy = jest
       .spyOn(NativeModules.Passkey, 'get')
