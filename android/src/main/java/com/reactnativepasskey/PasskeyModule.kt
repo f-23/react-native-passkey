@@ -215,7 +215,12 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       is InvalidStateError -> "CredentialAlreadyExists"
       is SecurityError -> "RequestFailed"
       is ConstraintError -> "BadConfiguration"
-      is NotAllowedError -> "RequestFailed"
+      // WebAuthn uses NotAllowedError as the (deliberately ambiguous) signal for a
+      // user-aborted/cancelled ceremony. The Credential Manager / FIDO2 provider
+      // surfaces a Back-button cancel as GetPublicKeyCredentialDomException(NotAllowedError)
+      // rather than GetCredentialCancellationException, so treat it as a cancellation
+      // (consistent with iOS .canceled and the web navigator.credentials convention).
+      is NotAllowedError -> "UserCancelled"
       is TimeoutError -> "TimedOut"
       is AbortError -> "UserCancelled"
       is DataError -> "RequestFailed"

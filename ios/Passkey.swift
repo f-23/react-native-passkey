@@ -16,6 +16,9 @@ struct RNPasskeyHandler {
 class Passkey: NSObject, RNPasskeyResultHandler {
   var passkeyDelegate: PasskeyDelegate?;
   var passkeyHandler: RNPasskeyHandler?;
+  // Tracks whether the in-flight request used immediate (silent) mediation, so a
+  // `.canceled` (1001) result can be disambiguated as "no credential available".
+  private var preferImmediatelyAvailable: Bool = false;
 
   /**
    Main create entrypoint
@@ -24,7 +27,10 @@ class Passkey: NSObject, RNPasskeyResultHandler {
   func create(_ request: String, forcePlatformKey: Bool, forceSecurityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
     do {
       passkeyHandler = RNPasskeyHandler(resolve, reject);
-      
+      // Create never uses immediate mediation; reset so a stale flag from a prior
+      // getImmediate() cannot mislabel a create cancellation as NoCredentials.
+      self.preferImmediatelyAvailable = false;
+
       // Decode request object
       let requestData = request.data(using: .utf8)!;
       let requestJSON = try JSONDecoder().decode(RNPasskeyCredentialCreationOptions.self, from: requestData);
@@ -68,7 +74,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
   func get(_ request: String, forcePlatformKey: Bool, forceSecurityKey: Bool, preferImmediatelyAvailable: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
     do {
       passkeyHandler = RNPasskeyHandler(resolve, reject);
-      
+      self.preferImmediatelyAvailable = preferImmediatelyAvailable;
+
       // Decode request object
       let requestData = request.data(using: .utf8)!;
       let requestJSON = try JSONDecoder().decode(RNPasskeyCredentialRequestOptions.self, from: requestData);
@@ -375,6 +382,13 @@ class Passkey: NSObject, RNPasskeyResultHandler {
     let errorCode = (error as NSError).code;
     switch errorCode {
       case 1001:
+      // Immediate (silent) mediation reports "no credential available" as
+      // ASAuthorizationError.canceled (1001), indistinguishable by code from a
+      // genuine user cancel. When we initiated an immediate request (iOS 16+),
+      // interpret it as NoCredentials so getImmediate() behaves as a silent probe.
+      if preferImmediatelyAvailable, #available(iOS 16.0, *) {
+        return RNPasskeyError(type: .noCredentials, message: error.localizedDescription);
+      }
       return RNPasskeyError(type: .cancelled, message: error.localizedDescription);
       case 1004:
       return RNPasskeyError(type: .requestFailed, message: error.localizedDescription);
@@ -388,8 +402,6 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       return RNPasskeyError(type: .timedOut, message: error.localizedDescription);
       case 1:
       return RNPasskeyError(type: .notSupported, message: error.localizedDescription);
-      case 1006:
-      return RNPasskeyError(type: .credentialAlreadyExists, message: error.localizedDescription);
       default:
       return RNPasskeyError(type: .unknown, message: error.localizedDescription);
     }

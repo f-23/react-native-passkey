@@ -2,6 +2,7 @@
 import { Platform, NativeModules } from 'react-native';
 import { Passkey } from '../Passkey';
 import { stringifyPasskeyRequest } from '../PasskeyRequest';
+import { NoCredentialsError, UserCancelledError } from '../PasskeyError';
 import type { PasskeyCreateRequest, PasskeyGetRequest } from '../PasskeyTypes';
 
 import AuthRequestJson from './testData/AuthRequest.json';
@@ -84,5 +85,23 @@ describe('Test Passkey Module', () => {
       'dXNlcg',
       JSON.stringify(['a', 'b'])
     );
+  });
+
+  test('should reject getImmediate with NoCredentials when no passkey is available', async () => {
+    jest
+      .spyOn(NativeModules.Passkey, 'get')
+      .mockRejectedValue({ code: 'NoCredentials' });
+
+    await expect(Passkey.getImmediate(AuthRequest)).rejects.toEqual(
+      NoCredentialsError
+    );
+  });
+
+  test('should reject get with UserCancelled when the user cancels', async () => {
+    jest
+      .spyOn(NativeModules.Passkey, 'get')
+      .mockRejectedValue({ code: 'UserCancelled' });
+
+    await expect(Passkey.get(AuthRequest)).rejects.toEqual(UserCancelledError);
   });
 });
