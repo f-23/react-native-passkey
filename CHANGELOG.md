@@ -1,5 +1,19 @@
 
 
+# [3.6.0](https://github.com/f-23/react-native-passkey/compare/v3.5.0...v3.6.0) (2026-08-01)
+
+
+### Bug Fixes
+
+* **android:** return stable error codes instead of localized messages ([ff144b1](https://github.com/f-23/react-native-passkey/commit/ff144b1f391de65d44451602d4499baf59a372fa))
+* normalize cancellation / no-credential errors on Android & iOS ([89a4c03](https://github.com/f-23/react-native-passkey/commit/89a4c039598ef03dc17318c67da062278086e834)), closes [#106](https://github.com/f-23/react-native-passkey/issues/106) [#107](https://github.com/f-23/react-native-passkey/issues/107)
+* propagate native error message instead of discarding it ([724c7fd](https://github.com/f-23/react-native-passkey/commit/724c7fd36d15bf5cade7e8ffc138df0012f22216))
+
+
+### Features
+
+* add WebAuthn Signal API (signalUnknownCredential, signalAllAcceptedCredentials) ([b000d4b](https://github.com/f-23/react-native-passkey/commit/b000d4b73f3d6a6d5d57d97077df35eb81e31490))
+
 # [3.5.0](https://github.com/f-23/react-native-passkey/compare/v3.4.0...v3.5.0) (2026-06-12)
 
 
