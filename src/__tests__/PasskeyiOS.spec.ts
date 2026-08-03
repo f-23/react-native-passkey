@@ -104,4 +104,19 @@ describe('Test Passkey Module', () => {
 
     await expect(Passkey.get(AuthRequest)).rejects.toEqual(UserCancelledError);
   });
+
+  // iOS reports both "no credential available" and a genuine dismissal as
+  // ASAuthorizationError.canceled (1001) under immediate mediation; the native
+  // layer separates them on whether a presentation anchor was requested. A
+  // dismissal must stay UserCancelled so callers can tell that the device does
+  // hold a passkey, matching Android's Credential Manager behaviour.
+  test('should reject getImmediate with UserCancelled when the user dismisses the sheet', async () => {
+    jest
+      .spyOn(NativeModules.Passkey, 'get')
+      .mockRejectedValue({ code: 'UserCancelled' });
+
+    await expect(Passkey.getImmediate(AuthRequest)).rejects.toEqual(
+      UserCancelledError
+    );
+  });
 });

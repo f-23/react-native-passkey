@@ -12,16 +12,31 @@ protocol RNPasskeyResultHandler {
 @available(iOS 15.0, *)
 class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
   private let _completionHandler: RNPasskeyResultHandler
-  
+
+  /**
+   Whether the system asked us for a window to present the credential sheet in.
+
+   The system only requests a presentation anchor when it is about to show UI,
+   and under immediate (silent) mediation it only shows UI when a credential is
+   actually available. That makes this the signal separating "the user dismissed
+   the sheet" from "the request failed before anything appeared" — two outcomes
+   iOS otherwise reports identically as ASAuthorizationError.canceled (1001).
+   See `Passkey.handleErrorCode`.
+   */
+  private(set) var didRequestPresentationAnchor: Bool = false;
+
   // Initializes delegate with a completion handler (callback function)
   init(completionHandler: RNPasskeyResultHandler) {
     _completionHandler = completionHandler;
   }
-  
+
   // Perform the authorization request for a given ASAuthorizationController instance
   func performAuthForController(controller: ASAuthorizationController, preferImmediatelyAvailable: Bool = false) {
     controller.delegate = self;
     controller.presentationContextProvider = self;
+    // A delegate is created per request, but reset defensively so a reused
+    // instance can never carry a stale "UI was shown" verdict into a new one.
+    didRequestPresentationAnchor = false;
     if preferImmediatelyAvailable {
       if #available(iOS 16.0, *) {
         controller.performRequests(options: .preferImmediatelyAvailableCredentials);
@@ -32,8 +47,9 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
       controller.performRequests();
     }
   }
-  
+
   func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+    didRequestPresentationAnchor = true;
     return UIApplication
       .shared
       .connectedScenes
