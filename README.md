@@ -170,6 +170,12 @@ with a credential picker if no passkey exists.
 When no credential is available the call rejects with a `NoCredentials` error
 and no UI is shown. Handle this error to fall back to your usual sign-in flow.
 
+If a credential *was* available and the user dismissed the sheet, the call
+rejects with `UserCancelled` instead. The two are distinct on both platforms, so
+`UserCancelled` from `getImmediate()` is a reliable signal that the device holds
+a passkey for your relying party — useful for deciding whether to offer a
+"Sign in with passkey" retry after a dismissal.
+
 ```ts
 import { Passkey } from 'react-native-passkey';
 

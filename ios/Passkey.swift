@@ -384,10 +384,19 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       case 1001:
       // Immediate (silent) mediation reports "no credential available" as
       // ASAuthorizationError.canceled (1001), indistinguishable by code from a
-      // genuine user cancel. When we initiated an immediate request (iOS 16+),
-      // interpret it as NoCredentials so getImmediate() behaves as a silent probe.
+      // genuine user cancel. Disambiguate on whether the system asked us for a
+      // presentation anchor: it only does so when it is about to show the
+      // credential sheet, and under immediate mediation it only shows the sheet
+      // when a credential exists. So an anchor request means the user saw the
+      // sheet and dismissed it; no anchor request means the probe found nothing
+      // and failed silently, which is what getImmediate() promises.
+      //
+      // This keeps iOS consistent with Android, where Credential Manager already
+      // separates GetCredentialCancellationException from NoCredentialException.
       if preferImmediatelyAvailable, #available(iOS 16.0, *) {
-        return RNPasskeyError(type: .noCredentials, message: error.localizedDescription);
+        if passkeyDelegate?.didRequestPresentationAnchor != true {
+          return RNPasskeyError(type: .noCredentials, message: error.localizedDescription);
+        }
       }
       return RNPasskeyError(type: .cancelled, message: error.localizedDescription);
       case 1004:
