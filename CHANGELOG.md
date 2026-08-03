@@ -1,5 +1,12 @@
 
 
+## [3.6.1](https://github.com/f-23/react-native-passkey/compare/v3.6.0...v3.6.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* **ios:** distinguish user cancel from no-credential in getImmediate ([3c01421](https://github.com/f-23/react-native-passkey/commit/3c01421ccdb35ebb3782faa45411d2dd077b569d)), closes [#107](https://github.com/f-23/react-native-passkey/issues/107)
+
 # [3.6.0](https://github.com/f-23/react-native-passkey/compare/v3.5.0...v3.6.0) (2026-08-01)
 
 
