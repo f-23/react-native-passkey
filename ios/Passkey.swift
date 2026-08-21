@@ -379,20 +379,36 @@ class Passkey: NSObject, RNPasskeyResultHandler {
    Handles ASAuthorization error codes
   */
   private func handleErrorCode(error: Error) -> RNPasskeyError {
-    let errorCode = (error as NSError).code;
+    let nsError = error as NSError;
+    let errorCode = nsError.code;
     switch errorCode {
       case 1001:
       // Immediate (silent) mediation reports "no credential available" as
-      // ASAuthorizationError.canceled (1001), indistinguishable by code from a
-      // genuine user cancel. Disambiguate on whether the system asked us for a
-      // presentation anchor: it only does so when it is about to show the
-      // credential sheet, and under immediate mediation it only shows the sheet
-      // when a credential exists. So an anchor request means the user saw the
-      // sheet and dismissed it; no anchor request means the probe found nothing
-      // and failed silently, which is what getImmediate() promises.
+      // ASAuthorizationError.canceled (1001), indistinguishable *by code* from a
+      // genuine user cancel. iOS separates them in whether the error carries a
+      // failure reason:
+      //
+      //   no credential   NSLocalizedFailureReasonErrorKey = "No credentials available for login."
+      //                   -> localizedDescription = "The operation couldn't be completed. <reason>"
+      //   genuine cancel  no failure reason, and userInfo is empty
+      //                   -> localizedDescription = "The operation couldn't be completed. (domain
+      //                      error code.)", Foundation's generic fallback
+      //
+      // It is the *presence* of the reason that is the signal, never its text, so this stays
+      // locale-independent. Verified against both outcomes on iOS 26.5 (simulator) and 26.6 (device).
       //
       // This keeps iOS consistent with Android, where Credential Manager already
       // separates GetCredentialCancellationException from NoCredentialException.
+      if preferImmediatelyAvailable, nsError.localizedFailureReason != nil {
+        return RNPasskeyError(type: .noCredentials, message: error.localizedDescription);
+      }
+      // Fallback for OS versions that do not populate the failure reason. The system only asks for a
+      // presentation anchor when it is about to show the credential sheet, and under immediate
+      // mediation it only shows the sheet when a credential exists — so no anchor request means the
+      // probe found nothing and failed silently, which is what getImmediate() promises.
+      //
+      // Not the primary signal: on iOS 26 the anchor is requested either way, even when nothing is
+      // presented, so this check cannot discriminate there.
       if preferImmediatelyAvailable, #available(iOS 16.0, *) {
         if passkeyDelegate?.didRequestPresentationAnchor != true {
           return RNPasskeyError(type: .noCredentials, message: error.localizedDescription);
