@@ -25,6 +25,10 @@ class Passkey: NSObject, RNPasskeyResultHandler {
    */
   @objc(create:withForcePlatformKey:withForceSecurityKey:withResolver:withRejecter:)
   func create(_ request: String, forcePlatformKey: Bool, forceSecurityKey: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    guard passkeyHandler == nil else {
+      reject("RequestFailed", "Another passkey request is already in progress", nil);
+      return;
+    }
     do {
       passkeyHandler = RNPasskeyHandler(resolve, reject);
       // Create never uses immediate mediation; reset so a stale flag from a prior
@@ -72,6 +76,10 @@ class Passkey: NSObject, RNPasskeyResultHandler {
    */
   @objc(get:withForcePlatformKey:withForceSecurityKey:withPreferImmediatelyAvailable:withResolver:withRejecter:)
   func get(_ request: String, forcePlatformKey: Bool, forceSecurityKey: Bool, preferImmediatelyAvailable: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    guard passkeyHandler == nil else {
+      reject("RequestFailed", "Another passkey request is already in progress", nil);
+      return;
+    }
     do {
       passkeyHandler = RNPasskeyHandler(resolve, reject);
       self.preferImmediatelyAvailable = preferImmediatelyAvailable;
@@ -186,6 +194,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       print("passkeyHandler was nil");
       return
     }
+    passkeyHandler = nil;
+    passkeyDelegate = nil;
     
     do {
       switch data {
@@ -211,7 +221,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
    */
   private func configureCreateSecurityKeyRequest(challenge: Data, userId: Data, request: RNPasskeyCredentialCreationOptions) -> ASAuthorizationSecurityKeyPublicKeyCredentialRegistrationRequest {
     
-    let securityKeyProvider = ASAuthorizationSecurityKeyPublicKeyCredentialProvider(relyingPartyIdentifier: request.rp.id!);
+    let securityKeyProvider = ASAuthorizationSecurityKeyPublicKeyCredentialProvider(relyingPartyIdentifier: request.rp.id);
 
     let authRequest = securityKeyProvider.createCredentialRegistrationRequest(challenge: challenge, 
                                                                               displayName: request.user.displayName,
@@ -245,7 +255,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
    */
   private func configureCreatePlatformRequest(challenge: Data, userId: Data, request: RNPasskeyCredentialCreationOptions) throws -> ASAuthorizationPlatformPublicKeyCredentialRegistrationRequest {
 
-    let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: request.rp.id!);
+    let platformProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: request.rp.id);
     
     let authRequest = platformProvider.createCredentialRegistrationRequest(challenge: challenge, 
                                                                            name: request.user.name,
@@ -315,7 +325,7 @@ class Passkey: NSObject, RNPasskeyResultHandler {
         if prf.evalByCredential != nil {
           // If evalByCredential is present and allowCredentials is empty we throw an "Unsupported" error as specified in the WebAuthn standard
 
-          if let allowCredentials = request.allowCredentials, allowCredentials.isEmpty {
+          if request.allowCredentials?.isEmpty != false {
             throw NSError(domain: "PRF Issue", code: 1)
           }
           
@@ -437,8 +447,9 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       print("passkeyHandler was nil");
       return
     }
+    passkeyHandler = nil;
+    passkeyDelegate = nil;
     
     handler.reject(error.type.rawValue, error.message, nil);
   }
 }
-

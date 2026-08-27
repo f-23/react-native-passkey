@@ -22,7 +22,10 @@ export function stringifyPasskeyRequest(
   platformOS: string
 ): string {
   if (platformOS !== 'android') {
-    return JSON.stringify(request);
+    return JSON.stringify({
+      ...request,
+      extensions: normalizeExtensions(request.extensions),
+    });
   }
 
   return JSON.stringify(normalizeAndroidRequest(request));
