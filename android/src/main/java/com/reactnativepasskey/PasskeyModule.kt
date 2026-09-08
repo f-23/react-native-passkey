@@ -18,6 +18,8 @@ import androidx.credentials.exceptions.publickeycredential.GetPublicKeyCredentia
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 import org.json.JSONArray
@@ -30,13 +32,17 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     return "Passkey"
   }
 
+  override fun invalidate() {
+    mainScope.cancel()
+    super.invalidate()
+  }
+
   @ReactMethod
   fun create(requestJson: String, forcePlatformKey: Boolean, forceSecurityKey: Boolean, promise: Promise) {
-    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
-    val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(requestJson)
-
     mainScope.launch {
       try {
+        val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
+        val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(requestJson)
         val activity = reactApplicationContext.currentActivity
           ?: run { promise.reject("RequestFailed", "No active Activity"); return@launch }
 
@@ -49,6 +55,8 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       } catch (e: CreateCredentialException) {
         val errorCode = handleRegistrationException(e)
         promise.reject(errorCode, e.errorMessage?.toString() ?: errorCode)
+      } catch (e: CancellationException) {
+        throw e
       } catch (e: Throwable) {
         promise.reject("UnknownError", e.message ?: "UnknownError")
       }
@@ -93,15 +101,14 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
 
   @ReactMethod
   fun get(requestJson: String, forcePlatformKey: Boolean, forceSecurityKey: Boolean, preferImmediatelyAvailable: Boolean, promise: Promise) {
-      val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
-      val getCredentialRequest =
-        GetCredentialRequest(
-          listOf(GetPublicKeyCredentialOption(requestJson)),
-          preferImmediatelyAvailableCredentials = preferImmediatelyAvailable
-        )
-
       mainScope.launch {
         try {
+          val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
+          val getCredentialRequest =
+            GetCredentialRequest(
+              listOf(GetPublicKeyCredentialOption(requestJson)),
+              preferImmediatelyAvailableCredentials = preferImmediatelyAvailable
+            )
           val activity = reactApplicationContext.currentActivity
             ?: run { promise.reject("RequestFailed", "No active Activity"); return@launch }
 
@@ -114,6 +121,8 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
         } catch (e: GetCredentialException) {
           val errorCode = handleAuthenticationException(e)
           promise.reject(errorCode, e.errorMessage?.toString() ?: errorCode)
+        } catch (e: CancellationException) {
+          throw e
         } catch (e: Throwable) {
           promise.reject("UnknownError", e.message ?: "UnknownError")
         }
@@ -130,16 +139,17 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
    */
   @ReactMethod
   fun signalUnknownCredential(rpId: String, credentialId: String, promise: Promise) {
-    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
-    val requestJson = JSONObject().apply {
-      put("rpId", rpId)
-      put("credentialId", credentialId)
-    }.toString()
-
     mainScope.launch {
       try {
+        val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
+        val requestJson = JSONObject().apply {
+          put("rpId", rpId)
+          put("credentialId", credentialId)
+        }.toString()
         credentialManager.signalCredentialState(SignalUnknownCredentialRequest(requestJson))
         promise.resolve(null)
+      } catch (e: CancellationException) {
+        throw e
       } catch (e: Exception) {
         promise.reject("SignalFailed", e.message ?: "signalUnknownCredential failed", e)
       }
@@ -162,17 +172,18 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     allAcceptedCredentialIdsJson: String,
     promise: Promise
   ) {
-    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
-    val requestJson = JSONObject().apply {
-      put("rpId", rpId)
-      put("userId", userId)
-      put("allAcceptedCredentialIds", JSONArray(allAcceptedCredentialIdsJson))
-    }.toString()
-
     mainScope.launch {
       try {
+        val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
+        val requestJson = JSONObject().apply {
+          put("rpId", rpId)
+          put("userId", userId)
+          put("allAcceptedCredentialIds", JSONArray(allAcceptedCredentialIdsJson))
+        }.toString()
         credentialManager.signalCredentialState(SignalAllAcceptedCredentialIdsRequest(requestJson))
         promise.resolve(null)
+      } catch (e: CancellationException) {
+        throw e
       } catch (e: Exception) {
         promise.reject("SignalFailed", e.message ?: "signalAllAcceptedCredentials failed", e)
       }
