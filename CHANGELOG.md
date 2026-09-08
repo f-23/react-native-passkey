@@ -1,5 +1,13 @@
 
 
+## [3.6.2](https://github.com/f-23/react-native-passkey/compare/v3.6.1...v3.6.2) (2026-09-08)
+
+
+### Bug Fixes
+
+* **android:** skip explicit Kotlin plugin when AGP registers the kotlin extension ([a1f6e81](https://github.com/f-23/react-native-passkey/commit/a1f6e81c3c2ce9d5dd5c8b350894332b3baf5372))
+* **ios:** detect no-credential from the error's failure reason ([42875d2](https://github.com/f-23/react-native-passkey/commit/42875d24e8ede1ab9397fae3d41bcd6260dd79a9))
+
 ## [3.6.1](https://github.com/f-23/react-native-passkey/compare/v3.6.0...v3.6.1) (2026-08-03)
 
 
