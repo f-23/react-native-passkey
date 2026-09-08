@@ -7,17 +7,29 @@ enum Either<Create, Get> {
     case create(Create), get(Get)
 }
 
-extension Array {
-    var data: Data { withUnsafeBytes { .init($0) } }
-}
+private struct PasskeyBinaryData: Decodable {
+  let data: Data
 
-extension Data {
-    func toUIntArray() -> [UInt] {
-        var UIntArray = Array<UInt>(repeating: 0, count: self.count/MemoryLayout<UInt>.stride)
-        _ = UIntArray.withUnsafeMutableBytes { self.copyBytes(to: $0) }
-        return UIntArray
+  init(from decoder: any Decoder) throws {
+    let value = try decoder.singleValueContainer()
+    if let encoded = try? value.decode(String.self) {
+      guard let decoded = Data(base64URLEncoded: encoded) else {
+        throw DecodingError.dataCorruptedError(in: value, debugDescription: "Invalid base64url binary value")
+      }
+      data = decoded
+    } else if let bytes = try? value.decode([UInt8].self) {
+      data = Data(bytes)
+    } else {
+      let record = try value.decode([String: UInt8].self)
+      let indexedBytes = try record.map { key, byte -> (Int, UInt8) in
+        guard let index = Int(key), index >= 0 else {
+          throw DecodingError.dataCorruptedError(in: value, debugDescription: "Invalid binary byte index")
+        }
+        return (index, byte)
+      }
+      data = Data(indexedBytes.sorted { $0.0 < $1.0 }.map { $0.1 })
     }
-    var uIntArray: [UInt] { toUIntArray() }
+  }
 }
 
 /**
@@ -244,7 +256,7 @@ internal struct PublicKeyCredentialRpEntity: Decodable {
   
   var name: String
   
-  var id: String?
+  var id: String
 }
 
 /**
@@ -268,23 +280,20 @@ internal struct PublicKeyCredentialDescriptor: Decodable {
 
   var id: Base64URLString
 
-  var transports: AuthenticatorTransport?
+  var transports: [AuthenticatorTransport]
+
+  private let credentialID: Data
 
   var type: PublicKeyCredentialType = .publicKey
 
   func getPlatformDescriptor() -> ASAuthorizationPlatformPublicKeyCredentialDescriptor {
-    return ASAuthorizationPlatformPublicKeyCredentialDescriptor.init(credentialID: Data(base64URLEncoded: self.id)!)
+    return ASAuthorizationPlatformPublicKeyCredentialDescriptor.init(credentialID: credentialID)
   }
     
   func getCrossPlatformDescriptor() -> ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor {
-    var transports = ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.allSupported
-    
-    if self.transports?.appleise()?.isEmpty == false {
-      transports = self.transports!.appleise()!.compactMap { $0 }
-    }
-    
-    return ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.init(credentialID: Data(base64URLEncoded: self.id)!,
-                                                                        transports: transports)
+    let supportedTransports = transports.flatMap { $0.appleise() ?? [] }
+    return ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.init(credentialID: credentialID,
+                                                                        transports: supportedTransports.isEmpty ? ASAuthorizationSecurityKeyPublicKeyCredentialDescriptor.Transport.allSupported : supportedTransports)
   }
   
   enum CodingKeys: String, CodingKey {
@@ -297,10 +306,14 @@ internal struct PublicKeyCredentialDescriptor: Decodable {
   init(from decoder: any Decoder) throws {
     let values = try decoder.container(keyedBy: CodingKeys.self)
     
-    id = try values.decodeIfPresent(String.self, forKey: .id)!
+    id = try values.decode(String.self, forKey: .id)
+    guard let decodedID = Data(base64URLEncoded: id), !decodedID.isEmpty else {
+      throw DecodingError.dataCorruptedError(forKey: .id, in: values, debugDescription: "Invalid base64url credential ID")
+    }
+    credentialID = decodedID
     
     let transportStrings = try values.decodeIfPresent([String].self, forKey: .transports) ?? []
-    transports = transportStrings.compactMap { AuthenticatorTransport(rawValue: $0) }.first ?? .none
+    transports = transportStrings.compactMap { AuthenticatorTransport(rawValue: $0) }
     
     let typeValue = try values.decodeIfPresent(String.self, forKey: .type)
     if let typeString = typeValue {
@@ -341,10 +354,7 @@ internal struct AuthenticationExtensionsLargeBlobInputs: Decodable {
     
     read = try values.decodeIfPresent(Bool.self, forKey: .read)
     
-    // RN converts UInt8Array to Dictionary, need to decode it
-    let writeDict = try values.decodeIfPresent([String : Int].self, forKey: .write)
-    // sort dict, convert to array and then data
-    write = writeDict?.sorted(by: { $0.key < $1.key }).map({ $0.value }).data
+    write = try values.decodeIfPresent(PasskeyBinaryData.self, forKey: .write)?.data
   }
 }
 
@@ -360,21 +370,8 @@ internal struct AuthenticationExtensionsPRFValues: Encodable, Decodable {
   init(from decoder: any Decoder) throws {
     let values = try decoder.container(keyedBy: CodingKeys.self)
     
-    // Decode RN dictionary -> Data for `first`
-    if let firstDict = try values.decodeIfPresent([String: Int].self, forKey: .first) {
-        first = firstDict
-            .sorted { Int($0.key)! < Int($1.key)! }
-            .map { UInt8($0.value) }
-            .data
-    }
-    
-    // Decode RN dictionary -> Data for `second`
-    if let secondDict = try values.decodeIfPresent([String: Int].self, forKey: .second) {
-        second = secondDict
-            .sorted { Int($0.key)! < Int($1.key)! }
-            .map { UInt8($0.value) }
-            .data
-    }
+    first = try values.decodeIfPresent(PasskeyBinaryData.self, forKey: .first)?.data
+    second = try values.decodeIfPresent(PasskeyBinaryData.self, forKey: .second)?.data
   }
   
   init(first: SymmetricKey?, second: SymmetricKey?) {
@@ -414,22 +411,23 @@ internal struct AuthenticationExtensionsPRFInputs: Decodable {
   init(from decoder: any Decoder) throws {
     let values = try decoder.container(keyedBy: CodingKeys.self)
     
-    // Decode RN dictionary -> Data for `first`
-    if let evalDict = try values.decodeIfPresent(AuthenticationExtensionsPRFValues.self, forKey: .eval) {
-      eval = AuthenticationExtensionsPRFValues(first: evalDict.first, second: evalDict.second)
-    }
-    
-    if let credentialsArray = try values.decodeIfPresent([[String: AuthenticationExtensionsPRFValues]].self, forKey: .evalByCredential) {
+    eval = try values.decodeIfPresent(AuthenticationExtensionsPRFValues.self, forKey: .eval)
+
+    if values.contains(.evalByCredential), try !values.decodeNil(forKey: .evalByCredential) {
+        let credentialsArray: [[String: AuthenticationExtensionsPRFValues]]
+        if let record = try? values.decode([String: AuthenticationExtensionsPRFValues].self, forKey: .evalByCredential) {
+          credentialsArray = [record]
+        } else {
+          credentialsArray = try values.decode([[String: AuthenticationExtensionsPRFValues]].self, forKey: .evalByCredential)
+        }
         evalByCredential = [:]
         
         for credentialDict in credentialsArray {
             for (credentialID, prfValues) in credentialDict {
-                let credentialIDData = credentialID.data(using: .utf8) ?? Data()
-                let convertedValues = AuthenticationExtensionsPRFValues(
-                  first: prfValues.first,
-                  second: prfValues.second
-                )
-                evalByCredential?[credentialIDData] = convertedValues
+                guard let credentialIDData = Data(base64URLEncoded: credentialID), !credentialIDData.isEmpty else {
+                  throw DecodingError.dataCorruptedError(forKey: .evalByCredential, in: values, debugDescription: "Invalid base64url credential ID")
+                }
+                evalByCredential?[credentialIDData] = prfValues
             }
         }
     }
@@ -444,7 +442,6 @@ internal struct AuthenticationExtensionsPRFInputs: Decodable {
       
       for (credentialID, value) in evalByCredential {
         guard let inputValues = value.toInputValues() else {
-          print("Failed to convert PRF Input Values \(value)")
           continue
         }
         

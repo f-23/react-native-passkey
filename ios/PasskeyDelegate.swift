@@ -3,7 +3,7 @@ import AuthenticationServices
 import CryptoKit
 
 @available(iOS 15.0, *)
-protocol RNPasskeyResultHandler {
+protocol RNPasskeyResultHandler: AnyObject {
   func onSuccess(_ data: PublicKeyCredentialJSON)
   func onError(_ error: Error)
 }
@@ -11,7 +11,7 @@ protocol RNPasskeyResultHandler {
 @objc(PasskeyDelegate)
 @available(iOS 15.0, *)
 class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
-  private let _completionHandler: RNPasskeyResultHandler
+  private weak var _completionHandler: RNPasskeyResultHandler?
 
   /**
    Whether the system asked us for a window to present the credential sheet in.
@@ -28,6 +28,18 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
   // Initializes delegate with a completion handler (callback function)
   init(completionHandler: RNPasskeyResultHandler) {
     _completionHandler = completionHandler;
+  }
+
+  private func finishWithError(_ error: Error) {
+    let handler = _completionHandler;
+    _completionHandler = nil;
+    handler?.onError(error);
+  }
+
+  private func finishWithSuccess(_ data: PublicKeyCredentialJSON) {
+    let handler = _completionHandler;
+    _completionHandler = nil;
+    handler?.onSuccess(data);
   }
 
   // Perform the authorization request for a given ASAuthorizationController instance
@@ -62,7 +74,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
       didCompleteWithError error: Error
   ) {
     // Authorization request returned an error
-    _completionHandler.onError(error);
+    finishWithError(error);
   }
 
   func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
@@ -80,13 +92,14 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     case let credential as ASAuthorizationSecurityKeyPublicKeyCredentialAssertion:
       self.handleSecurityKeyPublicKeyAssertionResponse(credential: credential);
     default:
-      _completionHandler.onError(ASAuthorizationError(ASAuthorizationError.invalidResponse));
+      finishWithError(ASAuthorizationError(ASAuthorizationError.invalidResponse));
     }
   }
   
   func handlePlatformPublicKeyRegistrationResponse(credential: ASAuthorizationPlatformPublicKeyCredentialRegistration) -> Void {
-    if credential.rawAttestationObject == nil {
-      _completionHandler.onError(ASAuthorizationError(ASAuthorizationError.invalidResponse));
+    guard let attestationObject = credential.rawAttestationObject else {
+      finishWithError(ASAuthorizationError(ASAuthorizationError.invalidResponse));
+      return;
     }
     
     // LargeBlob Extension
@@ -117,7 +130,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     
     let response =  AuthenticatorAttestationResponseJSON(
       clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
-      attestationObject: credential.rawAttestationObject!.toBase64URLEncodedString()
+      attestationObject: attestationObject.toBase64URLEncodedString()
     );
       
     let createResponse = RNPasskeyCreateResponseJSON(
@@ -127,12 +140,13 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
         clientExtensionResults: clientExtensionResults
     );
 
-    _completionHandler.onSuccess(.create(createResponse));
+    finishWithSuccess(.create(createResponse));
   }
   
   func handleSecurityKeyPublicKeyRegistrationResponse(credential: ASAuthorizationSecurityKeyPublicKeyCredentialRegistration) -> Void {
-    if credential.rawAttestationObject == nil {
-      _completionHandler.onError((ASAuthorizationError(ASAuthorizationError.Code.failed)));
+    guard let attestationObject = credential.rawAttestationObject else {
+      finishWithError((ASAuthorizationError(ASAuthorizationError.Code.failed)));
+      return;
     }
     
     var transports: [AuthenticatorTransport] = [];
@@ -148,7 +162,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     let response =  AuthenticatorAttestationResponseJSON(
       clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
       transports: transports, 
-      attestationObject: credential.rawAttestationObject!.toBase64URLEncodedString()
+      attestationObject: attestationObject.toBase64URLEncodedString()
     );
      
     let createResponse = RNPasskeyCreateResponseJSON(
@@ -157,19 +171,23 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
       response: response
     );
     
-    _completionHandler.onSuccess(.create(createResponse));
+    finishWithSuccess(.create(createResponse));
   }
   
   func handlePlatformPublicKeyAssertionResponse(credential: ASAuthorizationPlatformPublicKeyCredentialAssertion) -> Void {
+    guard let signature = credential.signature else {
+      finishWithError(ASAuthorizationError(ASAuthorizationError.invalidResponse));
+      return;
+    }
     var largeBlob: AuthenticationExtensionsLargeBlobOutputsJSON?;
     if #available(iOS 17.0, *), let result = credential.largeBlob?.result {
       largeBlob = AuthenticationExtensionsLargeBlobOutputsJSON()
         switch (result) {
         case .read(data: let blobData):
           if let blob = blobData {
-            // get uIntArray, then transform to a dictionary RN can work with
-            largeBlob?.blob = Dictionary(uniqueKeysWithValues: blob.uIntArray.enumerated().map { (index, value) in
-              (String(index + 1), Int(value))
+            // Preserve each byte and expose the same zero-based indices as Uint8Array.
+            largeBlob?.blob = Dictionary(uniqueKeysWithValues: blob.enumerated().map { (index, value) in
+              (String(index), Int(value))
             })
           }
         case .write(success: let successfullyWritten):
@@ -197,7 +215,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
     let response = AuthenticatorAssertionResponseJSON(
         authenticatorData: credential.rawAuthenticatorData.toBase64URLEncodedString(),
         clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
-        signature: credential.signature!.toBase64URLEncodedString(),
+        signature: signature.toBase64URLEncodedString(),
         userHandle: userHandle
     );
     
@@ -208,16 +226,20 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
         clientExtensionResults: clientExtensionResults
     );
     
-    _completionHandler.onSuccess(.get(getResponse));
+    finishWithSuccess(.get(getResponse));
   }
   
   func handleSecurityKeyPublicKeyAssertionResponse(credential: ASAuthorizationSecurityKeyPublicKeyCredentialAssertion) -> Void {
+    guard let signature = credential.signature else {
+      finishWithError(ASAuthorizationError(ASAuthorizationError.invalidResponse));
+      return;
+    }
     let userHandle: String? = credential.userID?.toBase64URLEncodedString();
     
     let response =  AuthenticatorAssertionResponseJSON(
       authenticatorData: credential.rawAuthenticatorData.toBase64URLEncodedString(),
       clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
-      signature: credential.signature!.toBase64URLEncodedString(),
+      signature: signature.toBase64URLEncodedString(),
       userHandle: userHandle
     );
     
@@ -227,6 +249,6 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
       response: response
     );
     
-    _completionHandler.onSuccess(.get(getResponse));
+    finishWithSuccess(.get(getResponse));
   }
 }
