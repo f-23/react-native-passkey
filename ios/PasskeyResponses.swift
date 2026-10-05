@@ -1,3 +1,5 @@
+import React
+
 /**
     Specification reference: https://w3c.github.io/webauthn/#typedefdef-publickeycredentialjson
 */
