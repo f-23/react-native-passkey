@@ -2,7 +2,12 @@
 import { Platform, NativeModules } from 'react-native';
 import { Passkey } from '../Passkey';
 import { stringifyPasskeyRequest } from '../PasskeyRequest';
-import { NoCredentialsError, UserCancelledError } from '../PasskeyError';
+import {
+  AbortedError,
+  NoCredentialsError,
+  TimeoutError,
+  UserCancelledError,
+} from '../PasskeyError';
 import type { PasskeyCreateRequest, PasskeyGetRequest } from '../PasskeyTypes';
 
 import AuthRequestJson from './testData/AuthRequest.json';
@@ -118,5 +123,33 @@ describe('Test Passkey Module', () => {
     await expect(Passkey.getImmediate(AuthRequest)).rejects.toEqual(
       UserCancelledError
     );
+  });
+
+  // The native layer enforces the request's own `timeout`, so it has to reach
+  // the native request JSON unchanged.
+  test('should pass the request timeout on and reject with TimedOut once it passes', async () => {
+    const getSpy = jest
+      .spyOn(NativeModules.Passkey, 'get')
+      .mockRejectedValue({ code: 'TimedOut' });
+
+    await expect(
+      Passkey.get({ ...AuthRequest, timeout: 120000 })
+    ).rejects.toEqual(TimeoutError);
+    expect(JSON.parse(getSpy.mock.calls[0][0]).timeout).toBe(120000);
+});
+
+  test('should call native cancel method', () => {
+    const cancelSpy = jest.spyOn(NativeModules.Passkey, 'cancel');
+
+    Passkey.cancel();
+    expect(cancelSpy).toHaveBeenCalled();
+  });
+
+  test('should reject a cancelled request with Aborted', async () => {
+    jest
+      .spyOn(NativeModules.Passkey, 'create')
+      .mockRejectedValue({ code: 'Aborted' });
+
+    await expect(Passkey.create(RegRequest)).rejects.toEqual(AbortedError);
   });
 });

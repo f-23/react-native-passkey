@@ -16,6 +16,7 @@ struct RNPasskeyHandler {
 class Passkey: NSObject, RNPasskeyResultHandler {
   var passkeyDelegate: PasskeyDelegate?;
   var passkeyHandler: RNPasskeyHandler?;
+  private var authController: ASAuthorizationController?;
   // Tracks whether the in-flight request used immediate (silent) mediation, so a
   // `.canceled` (1001) result can be disambiguated as "no credential available".
   private var preferImmediatelyAvailable: Bool = false;
@@ -58,6 +59,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       
       // Keep a reference to the delegate object
       self.passkeyDelegate = passkeyDelegate;
+      self.authController = authController;
+      self.scheduleTimeout(requestJSON.timeout, for: authController);
       
       // Perform the authorization
       passkeyDelegate.performAuthForController(controller: authController);
@@ -96,12 +99,68 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       
       // Keep a reference to the delegate object
       self.passkeyDelegate = passkeyDelegate;
+      self.authController = authController;
+      self.scheduleTimeout(requestJSON.timeout, for: authController);
 
       // Perform the authorization
       passkeyDelegate.performAuthForController(controller: authController, preferImmediatelyAvailable: preferImmediatelyAvailable);
 
     } catch let error as NSError {
       handleError(handleErrorCode(error: error));
+    }
+  }
+
+  /**
+   Cancels the request in flight, if any: its promise rejects with `Aborted` and the system
+   sheet is dismissed (see `endRequest`).
+   */
+  @objc(cancel)
+  func cancel() -> Void {
+    DispatchQueue.main.async {
+      self.endRequest(RNPasskeyError(type: .aborted, message: "The request was cancelled by the app."));
+    }
+  }
+
+  /**
+   Honours the WebAuthn `timeout` (in ms) of a request: AuthenticationServices has no timeout
+   of its own, so without this the sheet stays up for as long as the user leaves it. Once the
+   time is up the request rejects with `TimedOut` and its sheet is dismissed, like `cancel()`.
+   A no-op once that request has settled or another one has started.
+   */
+  private func scheduleTimeout(_ timeout: Int?, for controller: ASAuthorizationController) {
+    guard let timeout = timeout, timeout > 0 else {
+      return;
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(timeout)) { [weak self, weak controller] in
+      guard let self = self, let controller = controller, self.authController === controller else {
+        return;
+      }
+      self.endRequest(RNPasskeyError(type: .timedOut, message: "The request timed out."));
+    }
+  }
+
+  /**
+   Ends the request in flight before the system does: its promise rejects with `error` right
+   away, and on iOS 16+ `ASAuthorizationController.cancel()` dismisses the sheet. iOS 15 has no
+   way to close it, so there the sheet stays up until the user dismisses it.
+
+   The delegate is detached first, so the `.canceled` (1001) the controller reports afterwards
+   cannot reject a request started in the meantime. Main queue only: the delegate callbacks
+   settle the promise there too, so a request cannot settle twice.
+   */
+  private func endRequest(_ error: RNPasskeyError) {
+    let controller = authController;
+    authController = nil;
+    controller?.delegate = nil;
+    passkeyDelegate = nil;
+
+    if let handler = passkeyHandler {
+      passkeyHandler = nil;
+      handler.reject(error.type.rawValue, error.message, nil);
+    }
+
+    if #available(iOS 16.0, *) {
+      controller?.cancel();
     }
   }
   
@@ -186,6 +245,9 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       print("passkeyHandler was nil");
       return
     }
+    // Settled: a later `cancel()` or timeout must not reject this promise as well.
+    passkeyHandler = nil;
+    authController = nil;
     
     do {
       switch data {
@@ -437,6 +499,9 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       print("passkeyHandler was nil");
       return
     }
+    // Settled: a later `cancel()` or timeout must not reject this promise as well.
+    passkeyHandler = nil;
+    authController = nil;
     
     handler.reject(error.type.rawValue, error.message, nil);
   }

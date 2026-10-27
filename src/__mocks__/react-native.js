@@ -31,6 +31,7 @@ const NativeModules = {
     get: jest.fn(),
     signalUnknownCredential: jest.fn(),
     signalAllAcceptedCredentials: jest.fn(),
+    cancel: jest.fn(),
   },
 };
 

@@ -54,6 +54,11 @@ export const TimeoutError: PasskeyError = {
   message: 'The operation timed out.',
 };
 
+export const AbortedError: PasskeyError = {
+  error: 'Aborted',
+  message: 'The request was cancelled by the app.',
+};
+
 export const CredentialAlreadyExistsError: PasskeyError = {
   error: 'CredentialAlreadyExists',
   message: 'A passkey for this account already exists on this device.',
@@ -126,6 +131,9 @@ function mapNativeErrorCode(code: string, _error: TNativeError): PasskeyError {
     }
     case 'TimedOut': {
       return TimeoutError;
+    }
+    case 'Aborted': {
+      return AbortedError;
     }
     case 'CredentialAlreadyExists': {
       return CredentialAlreadyExistsError;

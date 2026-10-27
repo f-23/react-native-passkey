@@ -244,6 +244,29 @@ await Passkey.signalAllAcceptedCredentials({
 });
 ```
 
+#### Timeout and cancellation
+
+Both platforms honour the WebAuthn `timeout` (in milliseconds) of a create or
+get request: once it passes, the system sheet is dismissed and the promise
+rejects with `TimedOut`. Without a `timeout` the sheet stays up until the user
+completes or dismisses it.
+
+To end a request early, e.g. when the user navigates away, call
+`Passkey.cancel()`. The sheet is dismissed and the request's promise rejects
+with `Aborted`.
+
+```ts
+import { Passkey } from 'react-native-passkey';
+
+const request = Passkey.get({ ...requestJson, timeout: 120000 });
+
+// later, if the app no longer needs the result
+Passkey.cancel();
+```
+
+iOS 15 cannot dismiss the sheet: there the promise still rejects (with
+`TimedOut` or `Aborted`), but the sheet stays up until the user dismisses it.
+
 #### Error codes
 
 The library normalises native error codes into the following set:
@@ -260,7 +283,8 @@ The library normalises native error codes into the following set:
 | `CredentialAlreadyExists` | A passkey already exists for this account on this device (registration) |
 | `NoCreateOption`     | No credential provider can create a passkey (Android; e.g. no Google account signed in) |
 | `Interrupted`        | The operation was interrupted and may be retried                       |
-| `TimedOut`           | The operation timed out                                                |
+| `TimedOut`           | The request's `timeout` passed before it completed                     |
+| `Aborted`            | The app cancelled the request with `Passkey.cancel()`                  |
 | `UnknownError`       | Unknown / unmapped error                                               |
 
 ### Force Platform or Security Key (iOS-specific)
