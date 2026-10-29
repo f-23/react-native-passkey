@@ -20,6 +20,8 @@ enum RNPasskeyErrorType: String {
   
   case timedOut = "TimedOut"
 
+  case aborted = "Aborted"
+
   case HandlerUndefined = "HandlerUndefined"
 
   case noCredentials = "NoCredentials"

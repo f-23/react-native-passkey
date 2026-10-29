@@ -247,6 +247,19 @@ export class Passkey {
   }
 
   /**
+   * Cancels the create or get request in flight, if any, and dismisses its
+   * system sheet. The request's promise rejects with an `Aborted` error.
+   *
+   * Android cancels the Credential Manager call; iOS 16+ calls
+   * `ASAuthorizationController.cancel()`. iOS 15 has no way to dismiss the
+   * sheet, so there the promise rejects but the sheet stays up until the user
+   * dismisses it. A no-op when no request is in flight.
+   */
+  public static cancel(): void {
+    NativePasskey.cancel();
+  }
+
+  /**
    * Reports a credential the relying party no longer recognizes so OS credential
    * managers can remove / hide it (WebAuthn Signal API).
    *

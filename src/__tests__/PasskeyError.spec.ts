@@ -1,5 +1,6 @@
 import {
   handleNativeError,
+  AbortedError,
   BadConfiguration,
   CredentialAlreadyExistsError,
   InterruptedError,
@@ -25,6 +26,7 @@ describe('handleNativeError', () => {
     ['Interrupted', InterruptedError],
     ['NoCredentials', NoCredentialsError],
     ['TimedOut', TimeoutError],
+    ['Aborted', AbortedError],
     ['CredentialAlreadyExists', CredentialAlreadyExistsError],
     ['UnknownError', UnknownError],
   ])('maps native code "%s" to the matching PasskeyError', (code, expected) => {

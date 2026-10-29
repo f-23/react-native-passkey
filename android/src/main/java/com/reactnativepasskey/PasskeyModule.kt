@@ -16,15 +16,23 @@ import androidx.credentials.exceptions.domerrors.*
 import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException
 import androidx.credentials.exceptions.publickeycredential.GetPublicKeyCredentialDomException
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 import org.json.JSONArray
 import org.json.JSONObject
 
 class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
   private val mainScope = CoroutineScope(Dispatchers.Default)
+
+  // The create or get in flight, so `cancel` can stop it.
+  @Volatile
+  private var inFlight: Job? = null
 
   override fun getName(): String {
     return "Passkey"
@@ -35,12 +43,14 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
     val createPublicKeyCredentialRequest = CreatePublicKeyCredentialRequest(requestJson)
 
-    mainScope.launch {
+    inFlight = mainScope.launch {
       try {
         val activity = reactApplicationContext.currentActivity
           ?: run { promise.reject("RequestFailed", "No active Activity"); return@launch }
 
-        val result = credentialManager.createCredential(activity, createPublicKeyCredentialRequest)
+        val result = withRequestTimeout(requestJson) {
+          credentialManager.createCredential(activity, createPublicKeyCredentialRequest)
+        }
 
         val response =
           result.data.getString("androidx.credentials.BUNDLE_KEY_REGISTRATION_RESPONSE_JSON")
@@ -49,6 +59,10 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       } catch (e: CreateCredentialException) {
         val errorCode = handleRegistrationException(e)
         promise.reject(errorCode, e.errorMessage?.toString() ?: errorCode)
+      } catch (e: TimeoutCancellationException) {
+        promise.reject("TimedOut", "The request timed out.")
+      } catch (e: CancellationException) {
+        promise.reject("Aborted", "The request was cancelled by the app.")
       } catch (e: Throwable) {
         promise.reject("UnknownError", e.message ?: "UnknownError")
       }
@@ -100,12 +114,14 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
           preferImmediatelyAvailableCredentials = preferImmediatelyAvailable
         )
 
-      mainScope.launch {
+      inFlight = mainScope.launch {
         try {
           val activity = reactApplicationContext.currentActivity
             ?: run { promise.reject("RequestFailed", "No active Activity"); return@launch }
 
-          val result = credentialManager.getCredential(activity, getCredentialRequest)
+          val result = withRequestTimeout(requestJson) {
+            credentialManager.getCredential(activity, getCredentialRequest)
+          }
 
           val response =
             result.credential.data.getString("androidx.credentials.BUNDLE_KEY_AUTHENTICATION_RESPONSE_JSON")
@@ -114,10 +130,41 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
         } catch (e: GetCredentialException) {
           val errorCode = handleAuthenticationException(e)
           promise.reject(errorCode, e.errorMessage?.toString() ?: errorCode)
+        } catch (e: TimeoutCancellationException) {
+          promise.reject("TimedOut", "The request timed out.")
+        } catch (e: CancellationException) {
+          promise.reject("Aborted", "The request was cancelled by the app.")
         } catch (e: Throwable) {
           promise.reject("UnknownError", e.message ?: "UnknownError")
         }
       }
+  }
+
+  /**
+   * Runs a Credential Manager call within the WebAuthn `timeout` of the request (in ms), if it
+   * has one; Credential Manager itself does not enforce it. This has to be timed natively: the
+   * credential sheet is an activity on top of the app's, and React Native pauses JS timers while
+   * the app's activity is paused, so a JS timeout would not fire while the sheet is up. Throws
+   * TimeoutCancellationException when the time is up, which cancels the call and closes the
+   * sheet like `cancel` does.
+   */
+  private suspend fun <T> withRequestTimeout(requestJson: String, block: suspend () -> T): T {
+    val timeoutMs = try {
+      JSONObject(requestJson).optLong("timeout", 0L)
+    } catch (e: Exception) {
+      0L
+    }
+    return if (timeoutMs > 0) withTimeout(timeoutMs) { block() } else block()
+  }
+
+  /**
+   * Cancels the create or get in flight, if any. Cancelling the coroutine cancels the
+   * Credential Manager call, which closes its sheet, and the request's promise rejects with
+   * `Aborted`. A no-op once the request has settled.
+   */
+  @ReactMethod
+  fun cancel() {
+    inFlight?.cancel()
   }
 
   /**
