@@ -174,8 +174,10 @@ describe('Test Passkey Module', () => {
     await expect(
       Passkey.get({ ...AuthRequest, timeout: 120000 })
     ).rejects.toEqual(TimeoutError);
-    expect(JSON.parse(getSpy.mock.calls[0][0]).timeout).toBe(120000);
-});
+    expect(JSON.parse(getSpy.mock.lastCall?.[0] as string).timeout).toBe(
+      120000
+    );
+  });
 
   test('should call native cancel method', () => {
     const cancelSpy = jest.spyOn(NativeModules.Passkey, 'cancel');
