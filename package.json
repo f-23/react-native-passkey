@@ -11,6 +11,9 @@
     "lib",
     "android",
     "ios",
+    "Package.swift",
+    "spm-support",
+    "spm-headers",
     "cpp",
     "*.podspec",
     "!lib/typescript/example",
@@ -80,6 +83,9 @@
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
+  },
+  "swiftpmConfig": {
+    "name": "react_native_passkey"
   },
   "commitlint": {
     "extends": [
