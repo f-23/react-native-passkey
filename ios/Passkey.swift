@@ -13,7 +13,7 @@ struct RNPasskeyHandler {
 
 @objc(Passkey)
 @available(iOS 15.0, *)
-class Passkey: NSObject, RNPasskeyResultHandler {
+public class Passkey: NSObject, RNPasskeyResultHandler {
   var passkeyDelegate: PasskeyDelegate?;
   var passkeyHandler: RNPasskeyHandler?;
   private var authController: ASAuthorizationController?;
