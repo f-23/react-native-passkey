@@ -5,6 +5,7 @@ import { stringifyPasskeyRequest } from '../PasskeyRequest';
 import {
   AbortedError,
   NoCredentialsError,
+  NotSupportedError,
   TimeoutError,
   UserCancelledError,
 } from '../PasskeyError';
@@ -153,5 +154,19 @@ describe('Test Passkey Module', () => {
       .mockRejectedValue({ code: 'Aborted' });
 
     await expect(Passkey.create(RegRequest)).rejects.toEqual(AbortedError);
+  });
+
+  test('should report Restore Credentials as unsupported on iOS and reject calls with NotSupported', async () => {
+    expect(Passkey.isRestoreCredentialSupported()).toBe(false);
+
+    await expect(Passkey.createRestoreCredential(RegRequest)).rejects.toEqual(
+      NotSupportedError
+    );
+    await expect(Passkey.getRestoreCredential(AuthRequest)).rejects.toEqual(
+      NotSupportedError
+    );
+    await expect(Passkey.clearRestoreCredential()).rejects.toEqual(
+      NotSupportedError
+    );
   });
 });

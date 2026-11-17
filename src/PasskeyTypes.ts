@@ -40,6 +40,15 @@ export interface PasskeyCreateRequest {
   };
 }
 
+export interface PasskeyCreateRestoreCredentialOptions {
+  /**
+   * Whether the restore credential should be backed up to the cloud.
+   * Defaults to `true` (automatically falling back to `false` for local
+   * device-to-device transfer if `E2eeUnavailableException` is thrown).
+   */
+  isCloudBackupEnabled?: boolean;
+}
+
 /**
  * The FIDO2 Attestation Result
  * https://www.w3.org/TR/webauthn-3/#iface-pkcredential

@@ -5,16 +5,23 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.Promise
 
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CreatePublicKeyCredentialRequest
+import androidx.credentials.CreateRestoreCredentialRequest
+import androidx.credentials.CreateRestoreCredentialResponse
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetPublicKeyCredentialOption
+import androidx.credentials.GetRestoreCredentialOption
+import androidx.credentials.RestoreCredential
 import androidx.credentials.SignalAllAcceptedCredentialIdsRequest
 import androidx.credentials.SignalUnknownCredentialRequest
 import androidx.credentials.exceptions.*
 import androidx.credentials.exceptions.domerrors.*
 import androidx.credentials.exceptions.publickeycredential.CreatePublicKeyCredentialDomException
 import androidx.credentials.exceptions.publickeycredential.GetPublicKeyCredentialDomException
+import androidx.credentials.exceptions.restorecredential.CreateRestoreCredentialDomException
+import androidx.credentials.exceptions.restorecredential.E2eeUnavailableException
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -75,6 +82,12 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       is CreatePublicKeyCredentialDomException -> {
         return mapDomError(e.domError)
       }
+      is CreateRestoreCredentialDomException -> {
+        return mapDomError(e.domError)
+      }
+      is E2eeUnavailableException -> {
+        return "E2eeUnavailable"
+      }
       is CreateCredentialCancellationException -> {
         return "UserCancelled"
       }
@@ -102,6 +115,137 @@ class PasskeyModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
         // `type` is a stable identifier, `errorMessage` is display text that may change.
         return e.type
       }
+    }
+  }
+
+  /**
+   * Creates an Android Restore Credential (`CreateRestoreCredentialRequest`).
+   *
+   * When [isCloudBackupEnabled] is `true` and [E2eeUnavailableException] is thrown (because
+   * the user has not enabled cloud backup or a screen lock), this automatically falls back to
+   * creating a local restore credential (`isCloudBackupEnabled = false`) so device-to-device
+   * (D2D) transfers still succeed.
+   */
+  @ReactMethod
+  fun createRestoreCredential(
+    requestJson: String,
+    isCloudBackupEnabled: Boolean,
+    promise: Promise
+  ) {
+    val context = reactApplicationContext.currentActivity ?: reactApplicationContext.applicationContext
+    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
+
+    inFlight = mainScope.launch {
+      try {
+        val result = withRequestTimeout(requestJson) {
+          try {
+            credentialManager.createCredential(
+              context,
+              CreateRestoreCredentialRequest(requestJson, isCloudBackupEnabled)
+            )
+          } catch (e: E2eeUnavailableException) {
+            if (!isCloudBackupEnabled) throw e
+            credentialManager.createCredential(
+              context,
+              CreateRestoreCredentialRequest(requestJson, isCloudBackupEnabled = false)
+            )
+          }
+        }
+
+        val response =
+          (result as? CreateRestoreCredentialResponse)?.responseJson
+            ?: result.data.getString(
+              CreateRestoreCredentialResponse.BUNDLE_KEY_CREATE_RESTORE_CREDENTIAL_RESPONSE
+            )
+            ?: run { promise.reject("UnknownError", "Empty credential response"); return@launch }
+        promise.resolve(response)
+      } catch (e: CreateCredentialException) {
+        val errorCode = handleRegistrationException(e)
+        promise.reject(errorCode, e.errorMessage?.toString() ?: errorCode)
+      } catch (e: IllegalArgumentException) {
+        promise.reject("RequestFailed", e.message ?: "RequestFailed")
+      } catch (e: TimeoutCancellationException) {
+        promise.reject("TimedOut", "The request timed out.")
+      } catch (e: CancellationException) {
+        promise.reject("Aborted", "The request was cancelled by the app.")
+      } catch (e: Throwable) {
+        promise.reject("UnknownError", e.message ?: "UnknownError")
+      }
+    }
+  }
+
+  /**
+   * Retrieves an Android Restore Credential (`GetRestoreCredentialOption`) transferred from a
+   * previous device via cloud backup or device-to-device (D2D) transfer.
+   *
+   * Rejects with `NoCredentials` when no restore credential exists on the device.
+   */
+  @ReactMethod
+  fun getRestoreCredential(requestJson: String, promise: Promise) {
+    val context = reactApplicationContext.currentActivity ?: reactApplicationContext.applicationContext
+    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
+    val getCredentialRequest = GetCredentialRequest(
+      listOf(GetRestoreCredentialOption(requestJson))
+    )
+
+    inFlight = mainScope.launch {
+      try {
+        val result = withRequestTimeout(requestJson) {
+          credentialManager.getCredential(context, getCredentialRequest)
+        }
+
+        val credential = result.credential
+        val response =
+          (credential as? RestoreCredential)?.authenticationResponseJson
+            ?: credential.data.getString("androidx.credentials.BUNDLE_KEY_GET_RESTORE_CREDENTIAL_RESPONSE")
+            ?: run { promise.reject("UnknownError", "Empty credential response"); return@launch }
+        promise.resolve(response)
+      } catch (e: GetCredentialException) {
+        val errorCode = handleAuthenticationException(e)
+        promise.reject(errorCode, e.errorMessage?.toString() ?: errorCode)
+      } catch (e: IllegalArgumentException) {
+        promise.reject("RequestFailed", e.message ?: "RequestFailed")
+      } catch (e: TimeoutCancellationException) {
+        promise.reject("TimedOut", "The request timed out.")
+      } catch (e: CancellationException) {
+        promise.reject("Aborted", "The request was cancelled by the app.")
+      } catch (e: Throwable) {
+        promise.reject("UnknownError", e.message ?: "UnknownError")
+      }
+    }
+  }
+
+  /**
+   * Clears the stored Android Restore Credential (`TYPE_CLEAR_RESTORE_CREDENTIAL`) from the
+   * device and backup on sign-out.
+   */
+  @ReactMethod
+  fun clearRestoreCredential(promise: Promise) {
+    val credentialManager = CredentialManager.create(reactApplicationContext.applicationContext)
+
+    mainScope.launch {
+      try {
+        credentialManager.clearCredentialState(
+          ClearCredentialStateRequest(ClearCredentialStateRequest.TYPE_CLEAR_RESTORE_CREDENTIAL)
+        )
+        promise.resolve(null)
+      } catch (e: ClearCredentialException) {
+        val errorCode = handleClearException(e)
+        promise.reject(errorCode, e.errorMessage?.toString() ?: errorCode)
+      } catch (e: Throwable) {
+        promise.reject("UnknownError", e.message ?: "UnknownError")
+      }
+    }
+  }
+
+  private fun handleClearException(e: ClearCredentialException): String {
+    e.printStackTrace()
+    return when (e) {
+      is ClearCredentialInterruptedException -> "Interrupted"
+      is ClearCredentialProviderConfigurationException -> "NotConfigured"
+      is ClearCredentialUnknownException -> "UnknownError"
+      is ClearCredentialUnsupportedException -> "NotSupported"
+      else -> e.type
     }
   }
 

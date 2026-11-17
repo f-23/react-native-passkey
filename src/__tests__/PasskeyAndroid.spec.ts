@@ -4,7 +4,9 @@ import { Passkey } from '../Passkey';
 import { stringifyPasskeyRequest } from '../PasskeyRequest';
 import {
   AbortedError,
+  E2eeUnavailableError,
   NoCredentialsError,
+  NotSupportedError,
   TimeoutError,
   UserCancelledError,
 } from '../PasskeyError';
@@ -192,5 +194,96 @@ describe('Test Passkey Module', () => {
       .mockRejectedValue({ code: 'Aborted' });
 
     await expect(Passkey.create(RegRequest)).rejects.toEqual(AbortedError);
+  });
+
+  test('should report Restore Credentials as supported on Android 28+ and unsupported below 28', () => {
+    expect(Passkey.isRestoreCredentialSupported()).toBe(true);
+
+    (Platform as any).setVersion('26');
+    expect(Passkey.isRestoreCredentialSupported()).toBe(false);
+  });
+
+  test('should call native createRestoreCredential method with default cloud backup enabled', async () => {
+    const createRestoreSpy = jest
+      .spyOn(NativeModules.Passkey, 'createRestoreCredential')
+      .mockResolvedValue(JSON.stringify(RegAndroidResult));
+
+    const result = await Passkey.createRestoreCredential(RegRequest);
+    expect(createRestoreSpy).toHaveBeenCalledWith(
+      stringifyPasskeyRequest(RegRequest, 'android'),
+      true
+    );
+    expect(result).toEqual(RegAndroidResult);
+  });
+
+  test('should pass isCloudBackupEnabled option to native createRestoreCredential', async () => {
+    const createRestoreSpy = jest
+      .spyOn(NativeModules.Passkey, 'createRestoreCredential')
+      .mockResolvedValue(JSON.stringify(RegAndroidResult));
+
+    await Passkey.createRestoreCredential(RegRequest, {
+      isCloudBackupEnabled: false,
+    });
+    expect(createRestoreSpy).toHaveBeenCalledWith(
+      stringifyPasskeyRequest(RegRequest, 'android'),
+      false
+    );
+  });
+
+  test('should surface E2eeUnavailable when createRestoreCredential fails with E2eeUnavailable', async () => {
+    jest
+      .spyOn(NativeModules.Passkey, 'createRestoreCredential')
+      .mockRejectedValue({ code: 'E2eeUnavailable' });
+
+    await expect(
+      Passkey.createRestoreCredential(RegRequest, {
+        isCloudBackupEnabled: false,
+      })
+    ).rejects.toEqual(E2eeUnavailableError);
+  });
+
+  test('should call native getRestoreCredential method', async () => {
+    const getRestoreSpy = jest
+      .spyOn(NativeModules.Passkey, 'getRestoreCredential')
+      .mockResolvedValue(JSON.stringify(AuthAndroidResult));
+
+    const result = await Passkey.getRestoreCredential(AuthRequest);
+    expect(getRestoreSpy).toHaveBeenCalledWith(
+      stringifyPasskeyRequest(AuthRequest, 'android')
+    );
+    expect(result).toEqual(AuthAndroidResult);
+  });
+
+  test('should reject getRestoreCredential with NoCredentials when no restore key exists', async () => {
+    jest
+      .spyOn(NativeModules.Passkey, 'getRestoreCredential')
+      .mockRejectedValue({ code: 'NoCredentials' });
+
+    await expect(Passkey.getRestoreCredential(AuthRequest)).rejects.toEqual(
+      NoCredentialsError
+    );
+  });
+
+  test('should call native clearRestoreCredential method', async () => {
+    const clearRestoreSpy = jest
+      .spyOn(NativeModules.Passkey, 'clearRestoreCredential')
+      .mockResolvedValue(undefined);
+
+    await Passkey.clearRestoreCredential();
+    expect(clearRestoreSpy).toHaveBeenCalled();
+  });
+
+  test('should reject Restore Credential methods with NotSupported on Android < 28', async () => {
+    (Platform as any).setVersion('26');
+
+    await expect(Passkey.createRestoreCredential(RegRequest)).rejects.toEqual(
+      NotSupportedError
+    );
+    await expect(Passkey.getRestoreCredential(AuthRequest)).rejects.toEqual(
+      NotSupportedError
+    );
+    await expect(Passkey.clearRestoreCredential()).rejects.toEqual(
+      NotSupportedError
+    );
   });
 });

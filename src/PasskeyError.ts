@@ -70,6 +70,12 @@ export const NoCreateOptionError: PasskeyError = {
     'No credential provider is available to create a passkey on this device.',
 };
 
+export const E2eeUnavailableError: PasskeyError = {
+  error: 'E2eeUnavailable',
+  message:
+    'End-to-end encryption or cloud backup is unavailable on this device.',
+};
+
 export const NativeError = (
   message = 'An unknown error occurred'
 ): PasskeyError => {
@@ -140,6 +146,9 @@ function mapNativeErrorCode(code: string, _error: TNativeError): PasskeyError {
     }
     case 'NoCreateOption': {
       return NoCreateOptionError;
+    }
+    case 'E2eeUnavailable': {
+      return E2eeUnavailableError;
     }
     case 'UnknownError': {
       return UnknownError;

@@ -29,6 +29,9 @@ const NativeModules = {
   Passkey: {
     create: jest.fn(),
     get: jest.fn(),
+    createRestoreCredential: jest.fn(),
+    getRestoreCredential: jest.fn(),
+    clearRestoreCredential: jest.fn(),
     signalUnknownCredential: jest.fn(),
     signalAllAcceptedCredentials: jest.fn(),
     cancel: jest.fn(),

@@ -240,6 +240,21 @@ class Passkey: NSObject, RNPasskeyResultHandler {
     }
   }
 
+  @objc(createRestoreCredential:withIsCloudBackupEnabled:withResolver:withRejecter:)
+  func createRestoreCredential(_ request: String, isCloudBackupEnabled: Bool, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    reject(RNPasskeyErrorType.notSupported.rawValue, "Restore Credentials are only supported on Android.", nil);
+  }
+
+  @objc(getRestoreCredential:withResolver:withRejecter:)
+  func getRestoreCredential(_ request: String, resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    reject(RNPasskeyErrorType.notSupported.rawValue, "Restore Credentials are only supported on Android.", nil);
+  }
+
+  @objc(clearRestoreCredential:withRejecter:)
+  func clearRestoreCredential(_ resolve: @escaping RCTPromiseResolveBlock, reject: @escaping RCTPromiseRejectBlock) -> Void {
+    reject(RNPasskeyErrorType.notSupported.rawValue, "Restore Credentials are only supported on Android.", nil);
+  }
+
   func onSuccess(_ data: PublicKeyCredentialJSON) {
     guard let handler = passkeyHandler else {
       print("passkeyHandler was nil");
