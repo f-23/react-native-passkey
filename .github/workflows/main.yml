@@ -13,7 +13,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 23
-      - run: yarn install --frozen-lockfile
+      - run: corepack enable
+      - run: yarn install --immutable
       - run: yarn run prepare
       - name: Type Check
         run: yarn run typescript
