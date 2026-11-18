@@ -84,8 +84,10 @@ export interface TNativeError {
   message?: string;
 }
 
-export function handleNativeError(_error: TNativeError): PasskeyError {
-  if (!_error.code) {
+export function handleNativeError(
+  _error: TNativeError | null | undefined
+): PasskeyError {
+  if (!_error?.code) {
     return UnknownError;
   }
 
@@ -120,6 +122,11 @@ function mapNativeErrorCode(code: string, _error: TNativeError): PasskeyError {
     case 'InvalidChallenge': {
       return InvalidChallengeError;
     }
+    case 'InvalidUser':
+    case 'InvalidUserId': {
+      return InvalidUserIdError;
+    }
+    case 'NotConfigured':
     case 'BadConfiguration': {
       return BadConfiguration;
     }
