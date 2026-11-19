@@ -6,6 +6,7 @@ import {
 import { Platform } from 'react-native';
 import type {
   PasskeyCreateRequest,
+  PasskeyCreateRestoreCredentialOptions,
   PasskeyCreateResult,
   PasskeyGetRequest,
   PasskeyGetResult,
@@ -311,6 +312,109 @@ export class Passkey {
       request.userId,
       JSON.stringify(request.allAcceptedCredentialIds)
     );
+  }
+
+  /**
+   * Creates an Android Restore Credential (`CreateRestoreCredentialRequest`) so the
+   * user's account can be silently restored when setting up a new Android device via
+   * cloud backup or device-to-device (D2D) transfer.
+   *
+   * By default (`isCloudBackupEnabled = true`), if cloud backup or end-to-end
+   * encryption (screen lock) is not enabled on the device (`E2eeUnavailableException`),
+   * the native module automatically falls back to `isCloudBackupEnabled = false` so
+   * local D2D transfers remain supported.
+   *
+   * Android 9 (API 28)+ only; rejects with `NotSupported` on iOS or older Android versions.
+   *
+   * @param request The FIDO2 Attestation Request in JSON format
+   * @param options Optional settings (`isCloudBackupEnabled`, defaults to `true`)
+   * @returns The FIDO2 Attestation Result in JSON format
+   * @throws
+   */
+  public static async createRestoreCredential(
+    request: PasskeyCreateRequest,
+    options?: PasskeyCreateRestoreCredentialOptions
+  ): Promise<PasskeyCreateResult> {
+    if (!Passkey.isRestoreCredentialSupported()) {
+      throw NotSupportedError;
+    }
+
+    try {
+      const response = await NativePasskey.createRestoreCredential(
+        stringifyPasskeyRequest(request, Platform.OS),
+        options?.isCloudBackupEnabled ?? true
+      );
+
+      if (typeof response === 'string') {
+        return JSON.parse(response) as PasskeyCreateResult;
+      }
+      return response as PasskeyCreateResult;
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
+    }
+  }
+
+  /**
+   * Retrieves an Android Restore Credential (`GetRestoreCredentialOption`) transferred
+   * from a previous device to silently sign in the user on a new device.
+   *
+   * Rejects with `NoCredentials` when no restore credential exists on the device.
+   * Android 9 (API 28)+ only; rejects with `NotSupported` on iOS or older Android versions.
+   *
+   * @param request The FIDO2 Assertion Request in JSON format
+   * @returns The FIDO2 Assertion Result in JSON format
+   * @throws
+   */
+  public static async getRestoreCredential(
+    request: PasskeyGetRequest
+  ): Promise<PasskeyGetResult> {
+    if (!Passkey.isRestoreCredentialSupported()) {
+      throw NotSupportedError;
+    }
+
+    try {
+      const response = await NativePasskey.getRestoreCredential(
+        stringifyPasskeyRequest(request, Platform.OS)
+      );
+
+      if (typeof response === 'string') {
+        return JSON.parse(response) as PasskeyGetResult;
+      }
+      return response as PasskeyGetResult;
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
+    }
+  }
+
+  /**
+   * Deletes the stored Android Restore Credential (`TYPE_CLEAR_RESTORE_CREDENTIAL`) from
+   * the device and backup. Call this whenever the user signs out or their session is
+   * invalidated.
+   *
+   * Android 9 (API 28)+ only; rejects with `NotSupported` on iOS or older Android versions.
+   *
+   * @returns A Promise that resolves once the restore credential has been cleared
+   * @throws
+   */
+  public static async clearRestoreCredential(): Promise<void> {
+    if (!Passkey.isRestoreCredentialSupported()) {
+      throw NotSupportedError;
+    }
+
+    try {
+      await NativePasskey.clearRestoreCredential();
+    } catch (error: unknown) {
+      throw handleNativeError(error as TNativeError);
+    }
+  }
+
+  /**
+   * Checks if Android Restore Credentials are supported on the current device
+   *
+   * @returns A boolean indicating whether Restore Credentials are supported
+   */
+  public static isRestoreCredentialSupported(): boolean {
+    return Platform.OS === 'android' && Platform.Version >= 28;
   }
 
   /**

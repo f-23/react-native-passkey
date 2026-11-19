@@ -282,10 +282,61 @@ The library normalises native error codes into the following set:
 | `NoCredentials`      | No credential is available — also returned for silent `getImmediate()` |
 | `CredentialAlreadyExists` | A passkey already exists for this account on this device (registration) |
 | `NoCreateOption`     | No credential provider can create a passkey (Android; e.g. no Google account signed in) |
+| `E2eeUnavailable`    | End-to-end encryption or cloud backup is unavailable on this device (Android Restore Credentials) |
 | `Interrupted`        | The operation was interrupted and may be retried                       |
 | `TimedOut`           | The request's `timeout` passed before it completed                     |
 | `Aborted`            | The app cancelled the request with `Passkey.cancel()`                  |
 | `UnknownError`       | Unknown / unmapped error                                               |
+
+### Android Restore Credentials (Android-specific)
+
+Android's [Restore Credentials](https://developer.android.com/identity/sign-in/restore-credentials) feature (part of Credential Manager) silently restores a user's signed-in session when they set up a new Android device via end-to-end encrypted cloud backup or local device-to-device (D2D) transfer.
+
+Because restore keys use the same WebAuthn JSON formats (`PublicKeyCredentialCreationOptionsJSON` and `PublicKeyCredentialRequestOptionsJSON`) as passkeys, you can reuse your relying party's WebAuthn endpoints. These methods are supported on **Android 9 (API 28)+** and reject with `NotSupported` on iOS or older Android versions.
+
+#### 1. Create a Restore Credential (after sign-in)
+
+Call `Passkey.createRestoreCredential()` after the user signs in (or on app startup if already signed in and no restore key has been synced yet). By default (`isCloudBackupEnabled: true`), if the user does not have cloud backup or a screen lock enabled (`E2eeUnavailableException`), the native module automatically falls back to `isCloudBackupEnabled = false` so local D2D transfers still work.
+
+```ts
+import { Passkey } from 'react-native-passkey';
+
+if (Passkey.isRestoreCredentialSupported()) {
+  const creationResult = await Passkey.createRestoreCredential(requestJson);
+  // Send creationResult to your backend to store the restore public key
+}
+```
+
+#### 2. Retrieve a Restore Credential (on first launch on a new device)
+
+When your app launches with no active local session, call `Passkey.getRestoreCredential()` with an unauthenticated WebAuthn challenge (`userVerification: 'discouraged'`). If no restore key was transferred to the device, it rejects with `NoCredentials`.
+
+```ts
+import { Passkey } from 'react-native-passkey';
+
+if (Passkey.isRestoreCredentialSupported()) {
+  try {
+    const assertionResult = await Passkey.getRestoreCredential(requestJson);
+    // Verify assertionResult on your backend and establish the user's session
+  } catch (error) {
+    if (error.error === 'NoCredentials') {
+      // No restore credential on device — show normal sign-in screen
+    }
+  }
+}
+```
+
+#### 3. Clear the Restore Credential (on sign-out)
+
+Credential Manager does not automatically delete a restore key when a user logs out. Call `Passkey.clearRestoreCredential()` whenever the user signs out (or when their session is invalidated remotely) so they are not silently signed back in on the next launch.
+
+```ts
+import { Passkey } from 'react-native-passkey';
+
+if (Passkey.isRestoreCredentialSupported()) {
+  await Passkey.clearRestoreCredential();
+}
+```
 
 ### Force Platform or Security Key (iOS-specific)
 

@@ -3,6 +3,7 @@ import {
   AbortedError,
   BadConfiguration,
   CredentialAlreadyExistsError,
+  E2eeUnavailableError,
   InterruptedError,
   NoCredentialsError,
   NotSupportedError,
@@ -28,6 +29,7 @@ describe('handleNativeError', () => {
     ['TimedOut', TimeoutError],
     ['Aborted', AbortedError],
     ['CredentialAlreadyExists', CredentialAlreadyExistsError],
+    ['E2eeUnavailable', E2eeUnavailableError],
     ['UnknownError', UnknownError],
   ])('maps native code "%s" to the matching PasskeyError', (code, expected) => {
     expect(handleNativeError({ code })).toEqual(expected);
