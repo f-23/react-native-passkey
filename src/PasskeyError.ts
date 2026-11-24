@@ -70,6 +70,11 @@ export const NoCreateOptionError: PasskeyError = {
     'No credential provider is available to create a passkey on this device.',
 };
 
+export const DeviceNotConfiguredError: PasskeyError = {
+  error: 'DeviceNotConfigured',
+  message: 'This device is not set up to create passkeys.',
+};
+
 export const NativeError = (
   message = 'An unknown error occurred'
 ): PasskeyError => {
@@ -140,6 +145,9 @@ function mapNativeErrorCode(code: string, _error: TNativeError): PasskeyError {
     }
     case 'NoCreateOption': {
       return NoCreateOptionError;
+    }
+    case 'DeviceNotConfigured': {
+      return DeviceNotConfiguredError;
     }
     case 'UnknownError': {
       return UnknownError;

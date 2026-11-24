@@ -282,6 +282,7 @@ The library normalises native error codes into the following set:
 | `NoCredentials`      | No credential is available — also returned for silent `getImmediate()` |
 | `CredentialAlreadyExists` | A passkey already exists for this account on this device (registration) |
 | `NoCreateOption`     | No credential provider can create a passkey (Android; e.g. no Google account signed in) |
+| `DeviceNotConfigured` | The device is not set up to create passkeys (iOS 26+, `ASAuthorizationError` 1010) |
 | `Interrupted`        | The operation was interrupted and may be retried                       |
 | `TimedOut`           | The request's `timeout` passed before it completed                     |
 | `Aborted`            | The app cancelled the request with `Passkey.cancel()`                  |
