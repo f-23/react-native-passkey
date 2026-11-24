@@ -28,6 +28,8 @@ enum RNPasskeyErrorType: String {
 
   case credentialAlreadyExists = "CredentialAlreadyExists"
 
+  case deviceNotConfigured = "DeviceNotConfigured"
+
   case unknown = "UnknownError"
 
 }

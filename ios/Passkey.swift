@@ -483,6 +483,8 @@ class Passkey: NSObject, RNPasskeyResultHandler {
       return RNPasskeyError(type: .noCredentials, message: error.localizedDescription);
       case 1006:
       return RNPasskeyError(type: .credentialAlreadyExists, message: error.localizedDescription);
+      case 1010:
+      return RNPasskeyError(type: .deviceNotConfigured, message: error.localizedDescription);
       case 4004:
       return RNPasskeyError(type: .badConfiguration, message: error.localizedDescription);
       case 31:
