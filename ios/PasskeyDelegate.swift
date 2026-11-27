@@ -113,7 +113,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
       }
     }
       
-    let clientExtensionResults = (largeBlob != nil || prf != nil) ? AuthenticationExtensionsClientOutputsJSON(largeBlob: largeBlob, prf: prf) : nil;
+    let clientExtensionResults = AuthenticationExtensionsClientOutputsJSON(largeBlob: largeBlob, prf: prf)
     
     let response =  AuthenticatorAttestationResponseJSON(
       clientDataJSON: credential.rawClientDataJSON.toBase64URLEncodedString(),
@@ -191,7 +191,7 @@ class PasskeyDelegate: NSObject, ASAuthorizationControllerDelegate, ASAuthorizat
       }
     }
     
-    let clientExtensionResults = (largeBlob != nil || prf != nil) ? AuthenticationExtensionsClientOutputsJSON(largeBlob: largeBlob, prf: prf) : nil;
+    let clientExtensionResults = AuthenticationExtensionsClientOutputsJSON(largeBlob: largeBlob, prf: prf)
     let userHandle: String? = credential.userID?.toBase64URLEncodedString();
 
     let response = AuthenticatorAssertionResponseJSON(

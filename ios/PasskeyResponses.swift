@@ -18,7 +18,7 @@ internal struct RNPasskeyCreateResponseJSON: Encodable {
   
   var authenticatorAttachment: AuthenticatorAttachment?
   
-  var clientExtensionResults: AuthenticationExtensionsClientOutputsJSON?
+  var clientExtensionResults = AuthenticationExtensionsClientOutputsJSON()
 
   var type: PublicKeyCredentialType = .publicKey
   
@@ -59,7 +59,7 @@ internal struct RNPasskeyGetResponseJSON: Encodable {
   
   var response: AuthenticatorAssertionResponseJSON
   
-  var clientExtensionResults: AuthenticationExtensionsClientOutputsJSON?
+  var clientExtensionResults = AuthenticationExtensionsClientOutputsJSON()
   
 }
 
